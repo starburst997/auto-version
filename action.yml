@@ -1,0 +1,181 @@
+name: "Auto Version"
+description: "Automatically determine and tag semantic versions based on git tags"
+author: "starburst997"
+
+inputs:
+  release-type:
+    description: "Type of release (production, dev, rc)"
+    required: true
+  default-version:
+    description: "Default version if no tags exist"
+    required: false
+    default: "1.0.0"
+  git-user-name:
+    description: "Git user name for tagging"
+    required: false
+    default: "github-actions[bot]"
+  git-user-email:
+    description: "Git user email for tagging"
+    required: false
+    default: "github-actions[bot]@users.noreply.github.com"
+
+outputs:
+  version:
+    description: "Calculated version (e.g., 1.2.3 or 1.2.3-dev)"
+    value: ${{ steps.calculate.outputs.version }}
+  tag:
+    description: "Git tag (e.g., v1.2.3 or v1.2.3-dev)"
+    value: ${{ steps.calculate.outputs.tag }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate Version
+      id: calculate
+      shell: bash
+      run: |
+        # Fetch all tags
+        git fetch --tags
+
+        case "${{ inputs.release-type }}" in
+          production)
+            # Get latest stable production tag
+            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1)
+
+            # Get latest dev or rc tag to determine production version
+            LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1)
+            LATEST_RC_TAG=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1)
+
+            # Determine base version from dev/rc tags
+            if [ -z "$LATEST_DEV_TAG" ] && [ -z "$LATEST_RC_TAG" ]; then
+              # No dev/rc tags exist
+              if [ -z "$LATEST_STABLE" ]; then
+                # No tags at all, use default
+                VERSION="${{ inputs.default-version }}"
+              else
+                # Only stable tags exist (direct main commits), increment minor
+                STABLE_VER=${LATEST_STABLE#v}
+                IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
+                MINOR=$((MINOR + 1))
+                VERSION="${MAJOR}.${MINOR}.0"
+              fi
+            else
+              # Use latest dev or rc tag
+              if [ -n "$LATEST_RC_TAG" ]; then
+                LATEST_TAG=$LATEST_RC_TAG
+              else
+                LATEST_TAG=$LATEST_DEV_TAG
+              fi
+
+              # Strip 'v' and suffix to get base version
+              BASE_VERSION=${LATEST_TAG#v}
+              BASE_VERSION=${BASE_VERSION%%-*}
+
+              # Check if this version already exists as stable
+              if git rev-parse "v${BASE_VERSION}" >/dev/null 2>&1; then
+                # Version already exists, increment minor (hotfix scenario)
+                IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+                MINOR=$((MINOR + 1))
+                VERSION="${MAJOR}.${MINOR}.0"
+                echo "⚠️  Version ${BASE_VERSION} already exists, using ${VERSION} (hotfix)"
+              else
+                # Version doesn't exist, use it
+                VERSION="$BASE_VERSION"
+              fi
+            fi
+            ;;
+
+          dev)
+            # Get latest stable (production) tag
+            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1)
+
+            # Get latest dev tag
+            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1)
+
+            if [ -z "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
+              # No tags exist, use default
+              IFS='.' read -r MAJOR MINOR PATCH <<< "${{ inputs.default-version }}"
+            elif [ -n "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
+              # Production release exists but no dev yet, bump minor
+              VERSION=${LATEST_STABLE#v}
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+              MINOR=$((MINOR + 1))
+              PATCH=0
+            elif [ -n "$LATEST_STABLE" ]; then
+              # Compare versions - if stable >= dev, we just released to prod
+              STABLE_VER=${LATEST_STABLE#v}
+              DEV_VER=${LATEST_DEV#v}
+              DEV_VER=${DEV_VER%%-*}
+
+              # Use sort -V to compare versions
+              NEWER=$(printf "%s\n%s" "$STABLE_VER" "$DEV_VER" | sort -V -r | head -n1)
+
+              if [ "$NEWER" == "$STABLE_VER" ] && [ "$STABLE_VER" != "$DEV_VER" ]; then
+                # Production is newer, bump minor from stable
+                IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
+                MINOR=$((MINOR + 1))
+                PATCH=0
+              else
+                # Continue from dev, increment patch
+                IFS='.' read -r MAJOR MINOR PATCH <<< "$DEV_VER"
+                PATCH=$((PATCH + 1))
+              fi
+            else
+              # Only dev tags exist, increment patch
+              VERSION=${LATEST_DEV#v}
+              VERSION=${VERSION%%-*}
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+              PATCH=$((PATCH + 1))
+            fi
+
+            VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
+            ;;
+
+          rc)
+            # Get latest RC tag
+            LATEST_RC=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1)
+
+            if [ -z "$LATEST_RC" ]; then
+              # No RC tags, get latest dev or stable
+              LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1)
+              LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1)
+
+              if [ -n "$LATEST_DEV" ]; then
+                BASE_VERSION=${LATEST_DEV#v}
+                BASE_VERSION=${BASE_VERSION%%-*}
+              elif [ -n "$LATEST_STABLE" ]; then
+                STABLE_VER=${LATEST_STABLE#v}
+                IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
+                MINOR=$((MINOR + 1))
+                BASE_VERSION="${MAJOR}.${MINOR}.0"
+              else
+                BASE_VERSION="${{ inputs.default-version }}"
+              fi
+              VERSION="${BASE_VERSION}-rc.1"
+            else
+              # Extract RC number and increment
+              RC_VER=${LATEST_RC#v}
+              BASE_VERSION=${RC_VER%%-*}
+              RC_NUM=${RC_VER##*-rc.}
+              RC_NUM=$((RC_NUM + 1))
+              VERSION="${BASE_VERSION}-rc.${RC_NUM}"
+            fi
+            ;;
+
+          *)
+            echo "❌ Invalid release-type: ${{ inputs.release-type }}"
+            exit 1
+            ;;
+        esac
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        echo "📦 Version: $VERSION"
+
+    - name: Create and Push Tag
+      shell: bash
+      run: |
+        git config user.name "${{ inputs.git-user-name }}"
+        git config user.email "${{ inputs.git-user-email }}"
+        git tag ${{ steps.calculate.outputs.tag }}
+        git push origin ${{ steps.calculate.outputs.tag }}

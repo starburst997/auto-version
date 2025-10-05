@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auto Version and Tag
+        id: version
+        uses: ./
+        with:
+          release-type: production
+          update-major-minor: true
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ steps.version.outputs.tag }} \
+            --title "Release ${{ steps.version.outputs.version }}" \
+            --generate-notes

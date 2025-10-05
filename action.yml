@@ -18,6 +18,10 @@ inputs:
     description: "Git user email for tagging"
     required: false
     default: "github-actions[bot]@users.noreply.github.com"
+  update-major-minor:
+    description: "Update major and minor version tags (e.g., v1, v1.2) to point to latest version"
+    required: false
+    default: "false"
 
 outputs:
   version:
@@ -179,3 +183,54 @@ runs:
         git config user.email "${{ inputs.git-user-email }}"
         git tag ${{ steps.calculate.outputs.tag }}
         git push origin ${{ steps.calculate.outputs.tag }}
+
+    - name: Update Major/Minor Tags
+      if: inputs.update-major-minor == 'true'
+      shell: bash
+      run: |
+        VERSION=${{ steps.calculate.outputs.version }}
+        RELEASE_TYPE="${{ inputs.release-type }}"
+
+        # Strip any pre-release suffix (e.g., -dev, -rc.1)
+        BASE_VERSION=${VERSION%%-*}
+
+        # Extract major and minor versions
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+
+        case "$RELEASE_TYPE" in
+          production)
+            # Update major version tag (e.g., v1)
+            git tag -f "v${MAJOR}"
+            git push -f origin "v${MAJOR}"
+
+            # Update minor version tag (e.g., v1.2)
+            git tag -f "v${MAJOR}.${MINOR}"
+            git push -f origin "v${MAJOR}.${MINOR}"
+
+            echo "✅ Updated tags: v${MAJOR} and v${MAJOR}.${MINOR}"
+            ;;
+
+          dev)
+            # Update dev major version tag (e.g., v1-dev)
+            git tag -f "v${MAJOR}-dev"
+            git push -f origin "v${MAJOR}-dev"
+
+            # Update dev minor version tag (e.g., v1.2-dev)
+            git tag -f "v${MAJOR}.${MINOR}-dev"
+            git push -f origin "v${MAJOR}.${MINOR}-dev"
+
+            echo "✅ Updated tags: v${MAJOR}-dev and v${MAJOR}.${MINOR}-dev"
+            ;;
+
+          rc)
+            # Update rc major version tag (e.g., v1-rc)
+            git tag -f "v${MAJOR}-rc"
+            git push -f origin "v${MAJOR}-rc"
+
+            # Update rc minor version tag (e.g., v1.2-rc)
+            git tag -f "v${MAJOR}.${MINOR}-rc"
+            git push -f origin "v${MAJOR}.${MINOR}-rc"
+
+            echo "✅ Updated tags: v${MAJOR}-rc and v${MAJOR}.${MINOR}-rc"
+            ;;
+        esac

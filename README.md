@@ -1,6 +1,6 @@
 # Auto Version
 
-Automatically determine and tag semantic versions based on git tags for production, dev, and RC releases.
+Automatically manage semantic versions based on git tags for production, dev, and RC releases.
 
 ## Features
 
@@ -11,13 +11,13 @@ Automatically determine and tag semantic versions based on git tags for producti
 
 ## Inputs
 
-| Input                | Description                                                                 | Required | Default                                        |
-| -------------------- | --------------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| `release-type`       | Type of release (`production`, `dev`, `rc`)                                 | Yes      | -                                              |
-| `default-version`    | Default version if no tags exist                                            | No       | `1.0.0`                                        |
-| `git-user-name`      | Git user name for tagging                                                   | No       | `github-actions[bot]`                          |
-| `git-user-email`     | Git user email for tagging                                                  | No       | `github-actions[bot]@users.noreply.github.com` |
-| `update-major-minor` | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version     | No       | `false`                                        |
+| Input                | Description                                                             | Required | Default                                        |
+| -------------------- | ----------------------------------------------------------------------- | -------- | ---------------------------------------------- |
+| `release-type`       | Type of release (`production`, `dev`, `rc`)                             | Yes      | -                                              |
+| `default-version`    | Default version if no tags exist                                        | No       | `1.0.0`                                        |
+| `git-user-name`      | Git user name for tagging                                               | No       | `github-actions[bot]`                          |
+| `git-user-email`     | Git user email for tagging                                              | No       | `github-actions[bot]@users.noreply.github.com` |
+| `update-major-minor` | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                                        |
 
 ## Outputs
 
@@ -31,6 +31,7 @@ Automatically determine and tag semantic versions based on git tags for producti
 Before using this action, ensure your workflow has:
 
 1. **Checkout with full history**: Required to access all git tags
+
    ```yaml
    - uses: actions/checkout@v4
      with:
@@ -107,6 +108,7 @@ Enable automatic updating of major and minor version tags (useful for GitHub Act
 ```
 
 This updates floating tags based on release type:
+
 - **Production**: `v1` and `v1.2` → point to `v1.2.3`
 - **Dev**: `v1-dev` and `v1.2-dev` → point to `v1.2.3-dev`
 - **RC**: `v1-rc` and `v1.2-rc` → point to `v1.2.3-rc.1`

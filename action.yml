@@ -38,24 +38,29 @@ runs:
       id: calculate
       shell: bash
       run: |
-        # Fetch all tags
-        git fetch --tags
+        set -eo pipefail  # Exit on error and pipe failures
 
-        case "${{ inputs.release-type }}" in
+        # Fetch all tags
+        git fetch --tags || true
+
+        RELEASE_TYPE="${{ inputs.release-type }}"
+        DEFAULT_VERSION="${{ inputs.default-version }}"
+
+        case "$RELEASE_TYPE" in
           production)
             # Get latest stable production tag
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1)
+            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
 
             # Get latest dev or rc tag to determine production version
-            LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1)
-            LATEST_RC_TAG=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1)
+            LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
+            LATEST_RC_TAG=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1 || true)
 
             # Determine base version from dev/rc tags
             if [ -z "$LATEST_DEV_TAG" ] && [ -z "$LATEST_RC_TAG" ]; then
               # No dev/rc tags exist
               if [ -z "$LATEST_STABLE" ]; then
                 # No tags at all, use default
-                VERSION="${{ inputs.default-version }}"
+                VERSION="$DEFAULT_VERSION"
               else
                 # Only stable tags exist (direct main commits), increment minor
                 STABLE_VER=${LATEST_STABLE#v}
@@ -91,14 +96,14 @@ runs:
 
           dev)
             # Get latest stable (production) tag
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1)
+            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
 
             # Get latest dev tag
-            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1)
+            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
 
             if [ -z "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
               # No tags exist, use default
-              IFS='.' read -r MAJOR MINOR PATCH <<< "${{ inputs.default-version }}"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$DEFAULT_VERSION"
             elif [ -n "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
               # Production release exists but no dev yet, bump minor
               VERSION=${LATEST_STABLE#v}
@@ -137,12 +142,12 @@ runs:
 
           rc)
             # Get latest RC tag
-            LATEST_RC=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1)
+            LATEST_RC=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1 || true)
 
             if [ -z "$LATEST_RC" ]; then
               # No RC tags, get latest dev or stable
-              LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1)
-              LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1)
+              LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
+              LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
 
               if [ -n "$LATEST_DEV" ]; then
                 BASE_VERSION=${LATEST_DEV#v}
@@ -153,7 +158,7 @@ runs:
                 MINOR=$((MINOR + 1))
                 BASE_VERSION="${MAJOR}.${MINOR}.0"
               else
-                BASE_VERSION="${{ inputs.default-version }}"
+                BASE_VERSION="$DEFAULT_VERSION"
               fi
               VERSION="${BASE_VERSION}-rc.1"
             else
@@ -167,7 +172,7 @@ runs:
             ;;
 
           *)
-            echo "❌ Invalid release-type: ${{ inputs.release-type }}"
+            echo "❌ Invalid release-type: $RELEASE_TYPE"
             exit 1
             ;;
         esac

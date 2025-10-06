@@ -3,9 +3,14 @@ description: "Automatically determine and tag semantic versions based on git tag
 author: "starburst997"
 
 inputs:
-  release-type:
-    description: "Type of release (production, dev, rc)"
-    required: true
+  main-branch:
+    description: "Name of the main/production branch"
+    required: false
+    default: "main"
+  dev-branch:
+    description: "Name of the development branch"
+    required: false
+    default: "dev"
   default-version:
     description: "Default version if no tags exist"
     required: false
@@ -43,8 +48,38 @@ runs:
         # Fetch all tags
         git fetch --tags || true
 
-        RELEASE_TYPE="${{ inputs.release-type }}"
+        MAIN_BRANCH="${{ inputs.main-branch }}"
+        DEV_BRANCH="${{ inputs.dev-branch }}"
         DEFAULT_VERSION="${{ inputs.default-version }}"
+
+        # Detect context: PR or push, and which branch
+        IS_PR="${{ github.event_name == 'pull_request' }}"
+        if [ "$IS_PR" == "true" ]; then
+          BASE_REF="${{ github.base_ref }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+        else
+          CURRENT_BRANCH="${{ github.ref_name }}"
+        fi
+
+        # Determine release type based on context
+        if [ "$IS_PR" == "true" ]; then
+          if [ "$BASE_REF" == "$MAIN_BRANCH" ]; then
+            RELEASE_TYPE="rc"
+          else
+            RELEASE_TYPE="pr"
+          fi
+        else
+          if [ "$CURRENT_BRANCH" == "$MAIN_BRANCH" ]; then
+            RELEASE_TYPE="production"
+          elif [ "$CURRENT_BRANCH" == "$DEV_BRANCH" ]; then
+            RELEASE_TYPE="dev"
+          else
+            echo "❌ Unsupported branch: $CURRENT_BRANCH"
+            exit 1
+          fi
+        fi
+
+        echo "🔍 Detected context: $RELEASE_TYPE"
 
         case "$RELEASE_TYPE" in
           production)
@@ -141,34 +176,69 @@ runs:
             ;;
 
           rc)
-            # Get latest RC tag
-            LATEST_RC=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1 || true)
+            # Get latest dev or stable version tag to base our version on
+            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
+            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
 
-            if [ -z "$LATEST_RC" ]; then
-              # No RC tags, get latest dev or stable
-              LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-              LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-
-              if [ -n "$LATEST_DEV" ]; then
-                BASE_VERSION=${LATEST_DEV#v}
-                BASE_VERSION=${BASE_VERSION%%-*}
-              elif [ -n "$LATEST_STABLE" ]; then
-                STABLE_VER=${LATEST_STABLE#v}
-                IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
-                MINOR=$((MINOR + 1))
-                BASE_VERSION="${MAJOR}.${MINOR}.0"
-              else
-                BASE_VERSION="$DEFAULT_VERSION"
-              fi
-              VERSION="${BASE_VERSION}-rc.1"
+            # Use the most recent version as base
+            if [ -n "$LATEST_DEV" ]; then
+              LATEST_TAG=$LATEST_DEV
+            elif [ -n "$LATEST_STABLE" ]; then
+              LATEST_TAG=$LATEST_STABLE
             else
-              # Extract RC number and increment
-              RC_VER=${LATEST_RC#v}
-              BASE_VERSION=${RC_VER%%-*}
-              RC_NUM=${RC_VER##*-rc.}
-              RC_NUM=$((RC_NUM + 1))
-              VERSION="${BASE_VERSION}-rc.${RC_NUM}"
+              LATEST_TAG=""
             fi
+
+            if [ -z "$LATEST_TAG" ]; then
+              MAJOR=1
+              MINOR=0
+              PATCH=0
+            else
+              VERSION_STR=${LATEST_TAG#v}
+              VERSION_STR=${VERSION_STR%%-*}
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_STR"
+            fi
+
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+            # Count existing rc tags for this base version
+            RC_COUNT=$(git tag -l "v${BASE_VERSION}-rc.*" 2>/dev/null | wc -l | tr -d ' ')
+            RC_NUM=$((RC_COUNT + 1))
+
+            VERSION="${BASE_VERSION}-rc.${RC_NUM}"
+            ;;
+
+          pr)
+            # Get latest dev or stable version tag to base our version on
+            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
+            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
+
+            # Use the most recent version as base
+            if [ -n "$LATEST_DEV" ]; then
+              LATEST_TAG=$LATEST_DEV
+            elif [ -n "$LATEST_STABLE" ]; then
+              LATEST_TAG=$LATEST_STABLE
+            else
+              LATEST_TAG=""
+            fi
+
+            if [ -z "$LATEST_TAG" ]; then
+              MAJOR=1
+              MINOR=0
+              PATCH=0
+            else
+              VERSION_STR=${LATEST_TAG#v}
+              VERSION_STR=${VERSION_STR%%-*}
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_STR"
+            fi
+
+            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+
+            # Count existing pr tags for this PR number and base version
+            PR_COUNT=$(git tag -l "v${BASE_VERSION}-pr-${PR_NUMBER}.*" 2>/dev/null | wc -l | tr -d ' ')
+            PR_NUM=$((PR_COUNT + 1))
+
+            VERSION="${BASE_VERSION}-pr-${PR_NUMBER}.${PR_NUM}"
             ;;
 
           *)
@@ -194,9 +264,19 @@ runs:
       shell: bash
       run: |
         VERSION=${{ steps.calculate.outputs.version }}
-        RELEASE_TYPE="${{ inputs.release-type }}"
 
-        # Strip any pre-release suffix (e.g., -dev, -rc.1)
+        # Detect release type from version suffix
+        if [[ "$VERSION" == *"-dev"* ]]; then
+          RELEASE_TYPE="dev"
+        elif [[ "$VERSION" == *"-rc."* ]]; then
+          RELEASE_TYPE="rc"
+        elif [[ "$VERSION" == *"-pr-"* ]]; then
+          RELEASE_TYPE="pr"
+        else
+          RELEASE_TYPE="production"
+        fi
+
+        # Strip any pre-release suffix (e.g., -dev, -rc.1, -pr-123.1)
         BASE_VERSION=${VERSION%%-*}
 
         # Extract major and minor versions
@@ -237,5 +317,10 @@ runs:
             git push -f origin "v${MAJOR}.${MINOR}-rc"
 
             echo "✅ Updated tags: v${MAJOR}-rc and v${MAJOR}.${MINOR}-rc"
+            ;;
+
+          pr)
+            # Skip major/minor tag updates for PR versions
+            echo "⏭️  Skipping major/minor tag update for PR version: $VERSION"
             ;;
         esac

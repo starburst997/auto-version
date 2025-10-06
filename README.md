@@ -2,6 +2,22 @@
 
 Automatically manage semantic versions based on git tags for production, dev, and RC releases.
 
+## Why?
+
+Managing versions across different environments can be tedious. This action automates the entire versioning workflow:
+
+- **Dev branch commits** → `v1.2.3-dev` - Automatically increment patch for each dev deployment
+- **PR to dev** → `v1.2.3-pr-123.1` - Unique versions for PR preview environments
+- **PR to main** → `v1.2.3-rc.1` - Release candidates for staging environments
+- **Main branch** → `v1.2.3` - Production releases that strip the suffix from dev/rc versions
+- **After production release** → Next dev commit bumps minor version and starts a new development cycle
+
+This workflow enables:
+- Easy deployment to Kubernetes with distinct version tags
+- Automated semantic versioning without manual intervention
+- Clear version progression from dev → rc → production
+- No version conflicts across environments
+
 ## Features
 
 - **Smart versioning**: Automatically calculates next version based on existing tags
@@ -13,7 +29,8 @@ Automatically manage semantic versions based on git tags for production, dev, an
 
 | Input                | Description                                                             | Required | Default                                        |
 | -------------------- | ----------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| `release-type`       | Type of release (`production`, `dev`, `rc`)                             | Yes      | -                                              |
+| `main-branch`        | Name of the main/production branch                                      | No       | `main`                                         |
+| `dev-branch`         | Name of the development branch                                          | No       | `dev`                                          |
 | `default-version`    | Default version if no tags exist                                        | No       | `1.0.0`                                        |
 | `git-user-name`      | Git user name for tagging                                               | No       | `github-actions[bot]`                          |
 | `git-user-email`     | Git user email for tagging                                              | No       | `github-actions[bot]@users.noreply.github.com` |
@@ -46,14 +63,14 @@ Before using this action, ensure your workflow has:
 
 ## Usage
 
-### Production Release
+The action automatically detects the context (branch or PR) and generates the appropriate version.
+
+### Basic Usage
 
 ```yaml
 - name: Version and Tag
   id: version
   uses: starburst997/auto-version@v1
-  with:
-    release-type: production
 
 - name: Use Version
   run: |
@@ -61,25 +78,15 @@ Before using this action, ensure your workflow has:
     echo "Tag: ${{ steps.version.outputs.tag }}"
 ```
 
-### Dev Release
+### Custom Branch Names
 
 ```yaml
 - name: Version and Tag
   id: version
   uses: starburst997/auto-version@v1
   with:
-    release-type: dev
-    default-version: "1.0.0"
-```
-
-### RC Release
-
-```yaml
-- name: Version and Tag
-  id: version
-  uses: starburst997/auto-version@v1
-  with:
-    release-type: rc
+    main-branch: "master"
+    dev-branch: "develop"
 ```
 
 ### Custom Git User
@@ -89,7 +96,6 @@ Before using this action, ensure your workflow has:
   id: version
   uses: starburst997/auto-version@v1
   with:
-    release-type: production
     git-user-name: "Release Bot"
     git-user-email: "bot@example.com"
 ```
@@ -103,7 +109,6 @@ Enable automatic updating of major and minor version tags (useful for GitHub Act
   id: version
   uses: starburst997/auto-version@v1
   with:
-    release-type: production
     update-major-minor: true
 ```
 
@@ -115,33 +120,44 @@ This updates floating tags based on release type:
 
 Users can then reference `@v1` (production), `@v1-dev` (dev), or `@v1-rc` (rc) to always get the latest version.
 
-## Full Workflow Example
+## Full Workflow Examples
 
 ### Production Workflow
 
+Automatically creates production versions when merging to main:
+
 ```yaml
-name: Production Release
+name: Production Deploy
 
 on:
   push:
     branches: [main]
 
 jobs:
-  release:
+  deploy:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Version and Tag
+      - name: Auto Version and Tag
         id: version
         uses: starburst997/auto-version@v1
         with:
-          release-type: production
+          update-major-minor: true
 
-      - name: Build and Push
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ steps.version.outputs.tag }} \
+            --title "Release ${{ steps.version.outputs.version }}" \
+            --generate-notes
+
+      - name: Build and Deploy
         run: |
           echo "Building version ${{ steps.version.outputs.version }}"
           # Your build steps here
@@ -149,54 +165,103 @@ jobs:
 
 ### Dev Workflow
 
+Automatically creates dev versions on every push to dev branch:
+
 ```yaml
-name: Dev Release
+name: Dev Deploy
 
 on:
   push:
     branches: [dev]
 
 jobs:
-  release:
+  deploy:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Version and Tag
+      - name: Auto Version and Tag
         id: version
         uses: starburst997/auto-version@v1
-        with:
-          release-type: dev
 
-      - name: Build and Push
+      - name: Build and Deploy
         run: |
           echo "Building version ${{ steps.version.outputs.version }}"
           # Your build steps here
 ```
 
+### PR Workflow
+
+Automatically creates RC versions for PRs to main, and PR-specific versions for PRs to dev:
+
+```yaml
+name: PR Deploy
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Auto Version and Tag
+        id: version
+        uses: starburst997/auto-version@v1
+
+      - name: Build and Deploy
+        run: |
+          echo "Building version ${{ steps.version.outputs.version }}"
+          # PR to main: v1.2.3-rc.1 (staging)
+          # PR to dev: v1.2.3-pr-123.1 (preview)
+```
+
 ## How It Works
 
-### Production (`release-type: production`)
+The action automatically detects the workflow context and determines the version strategy:
+
+### Push to Main Branch (Production)
 
 1. Checks for latest dev/RC tags
-2. If found, uses that version as the next production version
-3. If version already exists, increments minor version (hotfix)
-4. If no dev/RC tags, increments minor from latest stable
+2. If found, uses that version as the next production version (strips suffix)
+3. If version already exists, increments patch (hotfix scenario)
+4. If no dev/RC tags, increments patch from latest stable
+5. Creates tag: `v1.2.3`
 
-### Dev (`release-type: dev`)
+### Push to Dev Branch
 
 1. Compares latest stable and dev versions
-2. If stable is newer (just released), bumps minor from stable (reset patch)
+2. If stable is newer (just released to production), bumps minor from stable and resets patch
 3. Otherwise, increments patch from latest dev
 4. Appends `-dev` suffix
+5. Creates tag: `v1.2.3-dev`
 
-### RC (`release-type: rc`)
+### Pull Request to Main Branch (Release Candidate)
 
-1. If no RC exists, creates from latest dev/stable + `-rc.1`
-2. If RC exists, increments RC number (e.g., `1.2.3-rc.2`)
+1. Gets latest dev or stable version as base
+2. Counts existing RC tags for this base version
+3. Increments RC number
+4. Creates tag: `v1.2.3-rc.1`, `v1.2.3-rc.2`, etc.
+
+### Pull Request to Dev Branch (PR Preview)
+
+1. Gets latest dev or stable version as base
+2. Counts existing PR tags for this PR number and base version
+3. Increments PR build number
+4. Creates tag: `v1.2.3-pr-123.1`, `v1.2.3-pr-123.2`, etc.
 
 ## License
 

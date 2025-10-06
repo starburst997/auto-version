@@ -18,7 +18,6 @@ jobs:
         id: version
         uses: ./
         with:
-          release-type: production
           update-major-minor: true
 
       - name: Create GitHub Release

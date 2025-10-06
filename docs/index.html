@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auto Version - Smart Semantic Versioning for GitHub Actions</title>
+    <title>Auto Version - Automatic Semantic Versioning for GitHub Actions</title>
     <style>
       * {
         margin: 0;
@@ -15,307 +15,319 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           "Helvetica Neue", Arial, sans-serif;
         line-height: 1.6;
-        color: #2d3748;
-        background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+        color: #333;
+        background: linear-gradient(135deg, #a78bfa 0%, #6366f1 100%);
         min-height: 100vh;
       }
 
+      .hero-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100vh;
+        background: linear-gradient(135deg, #a78bfa 0%, #6366f1 100%);
+        z-index: -1;
+      }
+
       .container {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: 0 20px;
       }
 
       header {
-        padding: 2rem 0 1rem;
+        padding: 2rem 0;
         text-align: center;
-      }
-
-      .github-link {
-        display: inline-block;
-        padding: 0.6rem 1.5rem;
-        background: rgba(255, 255, 255, 0.1);
         color: white;
-        text-decoration: none;
-        border-radius: 30px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        font-weight: 600;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-      }
-
-      .github-link:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
-        transform: translateY(-2px);
       }
 
       .hero {
-        padding: 4rem 0 5rem;
+        padding: 4rem 0 6rem;
         text-align: center;
         color: white;
-      }
-
-      .logo {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
       }
 
       h1 {
         font-size: 3.5rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.9));
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-shadow: 0 2px 20px rgba(102, 126, 234, 0.3);
       }
 
       .tagline {
-        font-size: 1.4rem;
-        margin-bottom: 2.5rem;
-        color: rgba(255, 255, 255, 0.9);
-        max-width: 700px;
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        max-width: 600px;
         margin-left: auto;
         margin-right: auto;
-        font-weight: 300;
       }
 
-      .version-flow {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1.5rem;
-        margin-top: 3rem;
-        flex-wrap: wrap;
-        font-family: "Monaco", "Menlo", monospace;
-      }
-
-      .version-tag {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        padding: 0.8rem 1.5rem;
-        border-radius: 12px;
-        color: white;
-        font-size: 1.1rem;
+      .btn {
+        display: inline-block;
+        padding: 0.875rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
         font-weight: 600;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
       }
 
-      .version-tag.dev {
-        border-color: #48bb78;
-        background: rgba(72, 187, 120, 0.2);
+      .btn-secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
       }
 
-      .version-tag.rc {
-        border-color: #ed8936;
-        background: rgba(237, 137, 54, 0.2);
-      }
-
-      .version-tag.prod {
-        border-color: #667eea;
-        background: rgba(102, 126, 234, 0.2);
-      }
-
-      .arrow {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1.5rem;
-      }
-
-      .content-section {
+      .btn-secondary:hover {
         background: white;
-        border-radius: 24px;
-        padding: 4rem 0;
-        margin: -2rem 0 3rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        color: #6366f1;
+      }
+
+      .features-section {
+        background: white;
+        border-radius: 20px 20px 0 0;
+        padding: 5rem 0;
+        margin-top: -2rem;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3rem;
+        margin-top: 3rem;
+      }
+
+      .feature {
+        text-align: center;
+        padding: 1.5rem;
+      }
+
+      .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #a78bfa 0%, #6366f1 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 1.5rem;
+        color: white;
+      }
+
+      .feature h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        color: #333;
+      }
+
+      .feature p {
+        color: #666;
+        line-height: 1.7;
       }
 
       .section-title {
         text-align: center;
-        font-size: 2.2rem;
-        color: #1a202c;
+        font-size: 2.5rem;
+        color: #333;
         margin-bottom: 1rem;
-        font-weight: 700;
       }
 
       .section-subtitle {
         text-align: center;
-        color: #718096;
-        font-size: 1.15rem;
+        color: #666;
+        font-size: 1.2rem;
         max-width: 600px;
-        margin: 0 auto 3rem;
+        margin: 0 auto;
       }
 
-      .usage-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-        margin-top: 3rem;
+      .journey-section {
+        background: #f8f9fa;
+        padding: 4rem 0;
+      }
+
+      .journey-flow {
+        max-width: 900px;
+        margin: 3rem auto 0;
         padding: 0 2rem;
       }
 
-      .usage-example {
-        background: #f7fafc;
-        border-radius: 16px;
-        padding: 2rem;
-        border-left: 4px solid #667eea;
-      }
-
-      .usage-example h3 {
-        font-size: 1.3rem;
-        color: #2d3748;
-        margin-bottom: 0.5rem;
+      .journey-step {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        background: white;
+        padding: 1.5rem 2rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
       }
 
-      .usage-example p {
-        color: #718096;
-        margin-bottom: 1.25rem;
+      .step-number {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #a78bfa 0%, #6366f1 100%);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+      }
+
+      .step-content {
+        flex: 1;
+      }
+
+      .step-action {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+      }
+
+      .step-result {
+        color: #666;
+        font-size: 0.95rem;
+      }
+
+      .step-version {
+        display: inline-block;
+        background: #1e1e1e;
+        color: #4ec9b0;
+        padding: 0.3rem 0.8rem;
+        border-radius: 5px;
+        font-family: "Monaco", monospace;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+      }
+
+      .usage-section {
+        padding: 5rem 0;
+        background: white;
+      }
+
+      .workflow-examples {
+        margin-top: 3rem;
+      }
+
+      .workflow-example {
+        margin-bottom: 3rem;
+      }
+
+      .workflow-example h3 {
+        font-size: 1.5rem;
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
 
       .code-block {
-        background: #1a202c;
-        color: #e2e8f0;
+        background: #1e1e1e;
+        color: #d4d4d4;
         padding: 1.5rem;
-        border-radius: 12px;
+        border-radius: 10px;
         overflow-x: auto;
+        margin-top: 1rem;
         font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
-        font-size: 0.9rem;
-        line-height: 1.7;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
       }
 
       .code-block .comment {
-        color: #68d391;
+        color: #6a9955;
       }
 
-      .code-block .key {
-        color: #90cdf4;
+      .code-block .keyword {
+        color: #c586c0;
       }
 
-      .code-block .value {
-        color: #fbb6ce;
+      .code-block .string {
+        color: #ce9178;
       }
 
       .reference-section {
-        padding: 0 2rem 3rem;
+        background: #f8f9fa;
+        padding: 4rem 0;
       }
 
       .reference-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 2rem;
         margin-top: 2rem;
       }
 
       .reference-card {
-        background: #f7fafc;
-        border-radius: 12px;
-        padding: 1.75rem;
-        border-top: 3px solid #667eea;
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
-      .reference-card h4 {
-        color: #2d3748;
-        margin-bottom: 0.75rem;
-        font-size: 1.1rem;
+      .reference-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+        border-bottom: 3px solid #a78bfa;
+        padding-bottom: 0.5rem;
       }
 
-      .reference-card .param-list {
-        list-style: none;
+      .param-item {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
       }
 
-      .reference-card .param-list li {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid #e2e8f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-
-      .reference-card .param-list li:last-child {
+      .param-item:last-child {
         border-bottom: none;
       }
 
       .param-name {
         font-family: "Monaco", monospace;
-        font-size: 0.9rem;
-        color: #667eea;
+        font-size: 0.95rem;
+        color: #6366f1;
         font-weight: 600;
+        margin-bottom: 0.25rem;
       }
 
       .param-desc {
-        font-size: 0.85rem;
-        color: #718096;
-        flex: 1;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.25rem;
       }
 
       .param-default {
-        font-size: 0.8rem;
-        color: #a0aec0;
+        font-size: 0.85rem;
+        color: #999;
         font-style: italic;
       }
 
-      .workflow-section {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 4rem 0;
-        color: white;
-        margin-top: 3rem;
-      }
-
-      .workflow-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 2.5rem;
-      }
-
-      .workflow-card {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 2rem;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-      }
-
-      .workflow-card h3 {
-        font-size: 1.4rem;
-        margin-bottom: 0.75rem;
-      }
-
-      .workflow-card .emoji {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-        display: block;
-      }
-
-      .workflow-card p {
-        opacity: 0.9;
-        line-height: 1.6;
-      }
-
       footer {
-        background: #1a202c;
+        background: #f8f9fa;
         padding: 3rem 0;
         text-align: center;
-        color: #a0aec0;
+        color: #666;
       }
 
       footer a {
-        color: #90cdf4;
+        color: #6366f1;
         text-decoration: none;
         font-weight: 600;
-        transition: color 0.2s;
       }
 
       footer a:hover {
-        color: #63b3ed;
+        text-decoration: underline;
       }
 
       @media (max-width: 768px) {
@@ -327,231 +339,452 @@
           font-size: 1.2rem;
         }
 
-        .version-flow {
+        .features {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        .journey-step {
           flex-direction: column;
-          gap: 1rem;
+          text-align: center;
         }
 
-        .arrow {
-          transform: rotate(90deg);
-        }
-
-        .usage-grid,
-        .reference-section {
-          padding: 0 1rem;
+        .reference-grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
+    <div class="hero-background"></div>
+
     <header>
       <div class="container">
-        <a
-          href="https://github.com/starburst997/auto-version"
-          class="github-link"
-        >
-          ⭐ View on GitHub →
-        </a>
+        <nav>
+          <a
+            href="https://github.com/starburst997/auto-version"
+            class="btn btn-secondary"
+          >
+            View on GitHub →
+          </a>
+        </nav>
       </div>
     </header>
 
     <section class="hero">
       <div class="container">
-        <div class="logo">🏷️</div>
         <h1>Auto Version</h1>
         <p class="tagline">
-          Context-aware semantic versioning for GitHub Actions. No configuration
-          needed.
+          Zero-configuration semantic versioning for GitHub Actions workflows
+        </p>
+      </div>
+    </section>
+
+    <section class="features-section">
+      <div class="container">
+        <h2 class="section-title">What Does It Do?</h2>
+        <p class="section-subtitle">
+          Automatically creates version tags based on your workflow context
         </p>
 
-        <div class="version-flow">
-          <div class="version-tag dev">v1.2.3-dev</div>
-          <div class="arrow">→</div>
-          <div class="version-tag rc">v1.2.3-rc.1</div>
-          <div class="arrow">→</div>
-          <div class="version-tag prod">v1.2.3</div>
+        <div class="features">
+          <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h3>Auto-Detection</h3>
+            <p>
+              Detects if you're pushing to main branch, dev branch, or creating a PR and
+              generates the right version tag automatically
+            </p>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">🔢</div>
+            <h3>Smart Versioning</h3>
+            <p>
+              Dev branch increments patch (v1.2.3-dev), PRs get unique tags (v1.2.3-rc.1 or v1.2.3-pr-123.1),
+              main branch strips suffixes (v1.2.3)
+            </p>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">🏷️</div>
+            <h3>Git Tag Based</h3>
+            <p>
+              Uses existing git tags to calculate versions. No version files,
+              no configuration files, just git tags
+            </p>
+          </div>
         </div>
       </div>
     </section>
 
-    <div class="content-section">
+    <section class="journey-section">
       <div class="container">
-        <h2 class="section-title">Simple as One Line</h2>
+        <h2 class="section-title">Version Journey</h2>
         <p class="section-subtitle">
-          Automatically detects your workflow context and generates the perfect
-          version tag
+          See how versions evolve through your development workflow
         </p>
 
-        <div class="usage-grid">
-          <div class="usage-example">
-            <h3>📋 Basic Usage</h3>
-            <p>Add to any workflow - it just works</p>
-            <div class="code-block">
-<span class="key">- name:</span> <span class="value">Version and Tag</span>
-  <span class="key">uses:</span> <span class="value">starburst997/auto-version@v1</span>
-  <span class="key">id:</span> <span class="value">version</span>
-
-<span class="comment"># Use the outputs</span>
-<span class="key">- run:</span> echo <span class="value">"Version: ${{ steps.version.outputs.version }}"</span>
+        <div class="journey-flow">
+          <div class="journey-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-action">Push commit to dev branch</div>
+              <div class="step-result">
+                Increments patch: <span class="step-version">v1.3.4-dev</span>
+              </div>
             </div>
           </div>
 
-          <div class="usage-example">
-            <h3>⚙️ With Options</h3>
-            <p>Customize branch names and enable floating tags</p>
-            <div class="code-block">
-<span class="key">- name:</span> <span class="value">Version and Tag</span>
-  <span class="key">uses:</span> <span class="value">starburst997/auto-version@v1</span>
-  <span class="key">with:</span>
-    <span class="key">main-branch:</span> <span class="value">master</span>
-    <span class="key">dev-branch:</span> <span class="value">develop</span>
-    <span class="key">update-major-minor:</span> <span class="value">true</span>
+          <div class="journey-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-action">Create PR to dev branch</div>
+              <div class="step-result">
+                Creates preview tag:
+                <span class="step-version">v1.3.4-pr-42.1</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="reference-section">
-          <h2 class="section-title" style="margin-top: 4rem">Reference</h2>
-          <p class="section-subtitle">Inputs and outputs for the action</p>
-
-          <div class="reference-grid">
-            <div class="reference-card">
-              <h4>📥 Inputs</h4>
-              <ul class="param-list">
-                <li>
-                  <div>
-                    <div class="param-name">main-branch</div>
-                    <div class="param-desc">Production branch name</div>
-                    <div class="param-default">Default: main</div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">dev-branch</div>
-                    <div class="param-desc">Development branch name</div>
-                    <div class="param-default">Default: dev</div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">default-version</div>
-                    <div class="param-desc">Starting version if no tags exist</div>
-                    <div class="param-default">Default: 1.0.0</div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">update-major-minor</div>
-                    <div class="param-desc">
-                      Update floating tags (v1, v1.2)
-                    </div>
-                    <div class="param-default">Default: false</div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">git-user-name</div>
-                    <div class="param-desc">Git committer name</div>
-                    <div class="param-default">Default: github-actions[bot]</div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">git-user-email</div>
-                    <div class="param-desc">Git committer email</div>
-                    <div class="param-default">
-                      Default: github-actions[bot]@users.noreply.github.com
-                    </div>
-                  </div>
-                </li>
-              </ul>
+          <div class="journey-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-action">Merge PR to dev branch</div>
+              <div class="step-result">
+                Increments patch: <span class="step-version">v1.3.5-dev</span>
+              </div>
             </div>
+          </div>
 
-            <div class="reference-card">
-              <h4>📤 Outputs</h4>
-              <ul class="param-list">
-                <li>
-                  <div>
-                    <div class="param-name">version</div>
-                    <div class="param-desc">
-                      Calculated semantic version without 'v' prefix
-                    </div>
-                    <div class="param-default">Example: 1.2.3-dev</div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">tag</div>
-                    <div class="param-desc">Git tag with 'v' prefix</div>
-                    <div class="param-default">Example: v1.2.3-dev</div>
-                  </div>
-                </li>
-              </ul>
+          <div class="journey-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-action">Create PR from dev branch to main branch</div>
+              <div class="step-result">
+                Creates RC tag: <span class="step-version">v1.3.5-rc.1</span>
+              </div>
             </div>
+          </div>
 
-            <div class="reference-card">
-              <h4>✅ Requirements</h4>
-              <ul class="param-list">
-                <li>
-                  <div>
-                    <div class="param-name">fetch-tags: true</div>
-                    <div class="param-desc">
-                      Required in checkout step to access version tags
-                    </div>
-                  </div>
-                </li>
-                <li>
-                  <div>
-                    <div class="param-name">contents: write</div>
-                    <div class="param-desc">
-                      Required permission to push tags to repository
-                    </div>
-                  </div>
-                </li>
-              </ul>
+          <div class="journey-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+              <div class="step-action">Merge PR to main branch (production release)</div>
+              <div class="step-result">
+                Strips suffix: <span class="step-version">v1.3.5</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="journey-step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+              <div class="step-action">Next commit to dev branch (after production release)</div>
+              <div class="step-result">
+                Bumps minor, resets patch:
+                <span class="step-version">v1.4.0-dev</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="journey-step">
+            <div class="step-number">7</div>
+            <div class="step-content">
+              <div class="step-action">Direct commit to main branch (hotfix scenario)</div>
+              <div class="step-result">
+                Increments patch from last production tag:
+                <span class="step-version">v1.3.6</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <section class="workflow-section">
+    <section class="usage-section">
       <div class="container">
-        <h2 class="section-title">How It Works</h2>
+        <h2 class="section-title">Usage</h2>
         <p class="section-subtitle">
-          Auto-detects your workflow context and applies the right versioning
-          strategy
+          Add to your workflows - one action, all environments
         </p>
 
-        <div class="workflow-grid">
-          <div class="workflow-card">
-            <span class="emoji">🌿</span>
-            <h3>Dev Branch</h3>
-            <p>
-              Push to dev → <code style="opacity: 0.8">v1.2.3-dev</code><br />
-              Increments patch for each commit. After production release, bumps
-              minor and resets patch.
-            </p>
+        <div class="workflow-examples">
+          <div class="workflow-example">
+            <h3>🌿 Dev Branch Workflow</h3>
+            <div class="code-block">
+              <span class="keyword">name:</span> Dev Deploy<br /><br />
+
+              <span class="keyword">on:</span><br />
+              &nbsp;&nbsp;<span class="keyword">push:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">branches:</span>
+              [dev]<br /><br />
+
+              <span class="keyword">jobs:</span><br />
+              &nbsp;&nbsp;<span class="keyword">deploy:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
+              ubuntu-latest<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >contents:</span
+              >
+              write<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">steps:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- uses:</span
+              >
+              <span class="string">actions/checkout@v4</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >with:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >fetch-tags:</span
+              >
+              <span class="string">true</span><br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Auto Version and Tag<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >uses:</span
+              >
+              <span class="string">starburst997/auto-version@v1</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >id:</span
+              >
+              version<br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Deploy to Dev<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >run:</span
+              >
+              <span class="string"
+                >echo "Deploying ${{ steps.version.outputs.version }}"</span
+              >
+            </div>
           </div>
 
-          <div class="workflow-card">
-            <span class="emoji">🔀</span>
-            <h3>Pull Requests</h3>
-            <p>
-              PR to main → <code style="opacity: 0.8">v1.2.3-rc.1</code><br />
-              PR to dev → <code style="opacity: 0.8">v1.2.3-pr-42.1</code><br />
-              Perfect for staging and preview environments.
-            </p>
+          <div class="workflow-example">
+            <h3>🔀 Pull Request Workflow</h3>
+            <div class="code-block">
+              <span class="keyword">name:</span> PR Deploy<br /><br />
+
+              <span class="keyword">on:</span><br />
+              &nbsp;&nbsp;<span class="keyword">pull_request:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">branches:</span>
+              [main, dev]<br /><br />
+
+              <span class="keyword">jobs:</span><br />
+              &nbsp;&nbsp;<span class="keyword">deploy:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
+              ubuntu-latest<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >contents:</span
+              >
+              write<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">steps:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- uses:</span
+              >
+              <span class="string">actions/checkout@v4</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >with:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >fetch-tags:</span
+              >
+              <span class="string">true</span><br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Auto Version and Tag<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >uses:</span
+              >
+              <span class="string">starburst997/auto-version@v1</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >id:</span
+              >
+              version<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"
+                ># PR to main: v1.2.3-rc.1</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"
+                ># PR to dev: v1.2.3-pr-42.1</span
+              ><br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Deploy Preview<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >run:</span
+              >
+              <span class="string"
+                >echo "Deploying ${{ steps.version.outputs.version }}"</span
+              >
+            </div>
           </div>
 
-          <div class="workflow-card">
-            <span class="emoji">🚀</span>
-            <h3>Production</h3>
-            <p>
-              Push to main → <code style="opacity: 0.8">v1.2.3</code><br />
-              Strips suffix from latest dev/RC tag. Handles hotfixes
-              automatically.
-            </p>
+          <div class="workflow-example">
+            <h3>🚀 Production Workflow</h3>
+            <div class="code-block">
+              <span class="keyword">name:</span> Production Deploy<br /><br />
+
+              <span class="keyword">on:</span><br />
+              &nbsp;&nbsp;<span class="keyword">push:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">branches:</span>
+              [main]<br /><br />
+
+              <span class="keyword">jobs:</span><br />
+              &nbsp;&nbsp;<span class="keyword">deploy:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
+              ubuntu-latest<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >contents:</span
+              >
+              write<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">steps:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- uses:</span
+              >
+              <span class="string">actions/checkout@v4</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >with:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >fetch-tags:</span
+              >
+              <span class="string">true</span><br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Auto Version and Tag<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >uses:</span
+              >
+              <span class="string">starburst997/auto-version@v1</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >id:</span
+              >
+              version<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >with:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >update-major-minor:</span
+              >
+              <span class="string">true</span>
+              <span class="comment"># Update v1, v1.2 tags</span><br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Create Release<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >env:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >GH_TOKEN:</span
+              >
+              ${{ github.token }}<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >run:</span
+              >
+              |<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gh
+              release create ${{ steps.version.outputs.tag }} \<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--title
+              <span class="string"
+                >"Release ${{ steps.version.outputs.version }}"</span
+              >
+              \<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--generate-notes
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="reference-section">
+      <div class="container">
+        <h2 class="section-title">Reference</h2>
+        <p class="section-subtitle">Complete inputs and outputs documentation</p>
+
+        <div class="reference-grid">
+          <div class="reference-card">
+            <h3>📥 Inputs</h3>
+
+            <div class="param-item">
+              <div class="param-name">main-branch</div>
+              <div class="param-desc">Name of the main/production branch</div>
+              <div class="param-default">Default: main</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">dev-branch</div>
+              <div class="param-desc">Name of the development branch</div>
+              <div class="param-default">Default: dev</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">default-version</div>
+              <div class="param-desc">Starting version if no tags exist</div>
+              <div class="param-default">Default: 1.0.0</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">update-major-minor</div>
+              <div class="param-desc">
+                Update floating tags (v1, v1.2) to point to latest version
+              </div>
+              <div class="param-default">Default: false</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">git-user-name</div>
+              <div class="param-desc">Git user name for tagging</div>
+              <div class="param-default">Default: github-actions[bot]</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">git-user-email</div>
+              <div class="param-desc">Git user email for tagging</div>
+              <div class="param-default">
+                Default: github-actions[bot]@users.noreply.github.com
+              </div>
+            </div>
+          </div>
+
+          <div class="reference-card">
+            <h3>📤 Outputs</h3>
+
+            <div class="param-item">
+              <div class="param-name">version</div>
+              <div class="param-desc">
+                Calculated version without 'v' prefix
+              </div>
+              <div class="param-default">Example: 1.2.3 or 1.2.3-dev</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">tag</div>
+              <div class="param-desc">Git tag with 'v' prefix</div>
+              <div class="param-default">Example: v1.2.3 or v1.2.3-dev</div>
+            </div>
           </div>
         </div>
       </div>
@@ -568,9 +801,6 @@
           <a href="https://github.com/starburst997/auto-version/releases"
             >Releases</a
           >
-        </p>
-        <p style="margin-top: 1rem; opacity: 0.7">
-          Made with 💜 for the GitHub Actions community
         </p>
       </div>
     </footer>

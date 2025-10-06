@@ -1,4 +1,4 @@
-name: "Auto Version Tag"
+name: "Auto Version Tagger"
 description: "Automatically determine and tag semantic versions based on git tags"
 author: "starburst997"
 

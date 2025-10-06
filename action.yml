@@ -1,6 +1,10 @@
-name: "Auto Version"
+name: "Auto Semantic Version"
 description: "Automatically determine and tag semantic versions based on git tags"
 author: "starburst997"
+
+branding:
+  icon: "tag"
+  color: "blue"
 
 inputs:
   main-branch:

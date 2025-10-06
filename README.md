@@ -47,13 +47,15 @@ This workflow enables:
 
 Before using this action, ensure your workflow has:
 
-1. **Checkout with full history**: Required to access all git tags
+1. **Checkout with tags**: Required to access all git tags for version calculation
 
    ```yaml
    - uses: actions/checkout@v4
      with:
-       fetch-depth: 0
+       fetch-tags: true
    ```
+
+   This fetches all tags and their referenced commits (much faster than `fetch-depth: 0` which fetches entire history).
 
 2. **Write permissions**: Required to push tags to the repository
    ```yaml
@@ -141,7 +143,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-tags: true
 
       - name: Auto Version and Tag
         id: version
@@ -182,7 +184,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-tags: true
 
       - name: Auto Version and Tag
         id: version
@@ -216,7 +218,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-tags: true
 
       - name: Auto Version and Tag
         id: version

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto Version - Smart Semantic Versioning for GitHub Actions</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: #2d3748;
+        background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      header {
+        padding: 2rem 0 1rem;
+        text-align: center;
+      }
+
+      .github-link {
+        display: inline-block;
+        padding: 0.6rem 1.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        text-decoration: none;
+        border-radius: 30px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        font-weight: 600;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .github-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+      }
+
+      .hero {
+        padding: 4rem 0 5rem;
+        text-align: center;
+        color: white;
+      }
+
+      .logo {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+      }
+
+      h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 2px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .tagline {
+        font-size: 1.4rem;
+        margin-bottom: 2.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+        font-weight: 300;
+      }
+
+      .version-flow {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1.5rem;
+        margin-top: 3rem;
+        flex-wrap: wrap;
+        font-family: "Monaco", "Menlo", monospace;
+      }
+
+      .version-tag {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 0.8rem 1.5rem;
+        border-radius: 12px;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .version-tag.dev {
+        border-color: #48bb78;
+        background: rgba(72, 187, 120, 0.2);
+      }
+
+      .version-tag.rc {
+        border-color: #ed8936;
+        background: rgba(237, 137, 54, 0.2);
+      }
+
+      .version-tag.prod {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.2);
+      }
+
+      .arrow {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.5rem;
+      }
+
+      .content-section {
+        background: white;
+        border-radius: 24px;
+        padding: 4rem 0;
+        margin: -2rem 0 3rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      .section-title {
+        text-align: center;
+        font-size: 2.2rem;
+        color: #1a202c;
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .section-subtitle {
+        text-align: center;
+        color: #718096;
+        font-size: 1.15rem;
+        max-width: 600px;
+        margin: 0 auto 3rem;
+      }
+
+      .usage-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        margin-top: 3rem;
+        padding: 0 2rem;
+      }
+
+      .usage-example {
+        background: #f7fafc;
+        border-radius: 16px;
+        padding: 2rem;
+        border-left: 4px solid #667eea;
+      }
+
+      .usage-example h3 {
+        font-size: 1.3rem;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .usage-example p {
+        color: #718096;
+        margin-bottom: 1.25rem;
+      }
+
+      .code-block {
+        background: #1a202c;
+        color: #e2e8f0;
+        padding: 1.5rem;
+        border-radius: 12px;
+        overflow-x: auto;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .code-block .comment {
+        color: #68d391;
+      }
+
+      .code-block .key {
+        color: #90cdf4;
+      }
+
+      .code-block .value {
+        color: #fbb6ce;
+      }
+
+      .reference-section {
+        padding: 0 2rem 3rem;
+      }
+
+      .reference-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+
+      .reference-card {
+        background: #f7fafc;
+        border-radius: 12px;
+        padding: 1.75rem;
+        border-top: 3px solid #667eea;
+      }
+
+      .reference-card h4 {
+        color: #2d3748;
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+      }
+
+      .reference-card .param-list {
+        list-style: none;
+      }
+
+      .reference-card .param-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .reference-card .param-list li:last-child {
+        border-bottom: none;
+      }
+
+      .param-name {
+        font-family: "Monaco", monospace;
+        font-size: 0.9rem;
+        color: #667eea;
+        font-weight: 600;
+      }
+
+      .param-desc {
+        font-size: 0.85rem;
+        color: #718096;
+        flex: 1;
+      }
+
+      .param-default {
+        font-size: 0.8rem;
+        color: #a0aec0;
+        font-style: italic;
+      }
+
+      .workflow-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 4rem 0;
+        color: white;
+        margin-top: 3rem;
+      }
+
+      .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2.5rem;
+      }
+
+      .workflow-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 2rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .workflow-card h3 {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .workflow-card .emoji {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      .workflow-card p {
+        opacity: 0.9;
+        line-height: 1.6;
+      }
+
+      footer {
+        background: #1a202c;
+        padding: 3rem 0;
+        text-align: center;
+        color: #a0aec0;
+      }
+
+      footer a {
+        color: #90cdf4;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+      }
+
+      footer a:hover {
+        color: #63b3ed;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        .tagline {
+          font-size: 1.2rem;
+        }
+
+        .version-flow {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .arrow {
+          transform: rotate(90deg);
+        }
+
+        .usage-grid,
+        .reference-section {
+          padding: 0 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <a
+          href="https://github.com/starburst997/auto-version"
+          class="github-link"
+        >
+          ⭐ View on GitHub →
+        </a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="container">
+        <div class="logo">🏷️</div>
+        <h1>Auto Version</h1>
+        <p class="tagline">
+          Context-aware semantic versioning for GitHub Actions. No configuration
+          needed.
+        </p>
+
+        <div class="version-flow">
+          <div class="version-tag dev">v1.2.3-dev</div>
+          <div class="arrow">→</div>
+          <div class="version-tag rc">v1.2.3-rc.1</div>
+          <div class="arrow">→</div>
+          <div class="version-tag prod">v1.2.3</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="content-section">
+      <div class="container">
+        <h2 class="section-title">Simple as One Line</h2>
+        <p class="section-subtitle">
+          Automatically detects your workflow context and generates the perfect
+          version tag
+        </p>
+
+        <div class="usage-grid">
+          <div class="usage-example">
+            <h3>📋 Basic Usage</h3>
+            <p>Add to any workflow - it just works</p>
+            <div class="code-block">
+<span class="key">- name:</span> <span class="value">Version and Tag</span>
+  <span class="key">uses:</span> <span class="value">starburst997/auto-version@v1</span>
+  <span class="key">id:</span> <span class="value">version</span>
+
+<span class="comment"># Use the outputs</span>
+<span class="key">- run:</span> echo <span class="value">"Version: ${{ steps.version.outputs.version }}"</span>
+            </div>
+          </div>
+
+          <div class="usage-example">
+            <h3>⚙️ With Options</h3>
+            <p>Customize branch names and enable floating tags</p>
+            <div class="code-block">
+<span class="key">- name:</span> <span class="value">Version and Tag</span>
+  <span class="key">uses:</span> <span class="value">starburst997/auto-version@v1</span>
+  <span class="key">with:</span>
+    <span class="key">main-branch:</span> <span class="value">master</span>
+    <span class="key">dev-branch:</span> <span class="value">develop</span>
+    <span class="key">update-major-minor:</span> <span class="value">true</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="reference-section">
+          <h2 class="section-title" style="margin-top: 4rem">Reference</h2>
+          <p class="section-subtitle">Inputs and outputs for the action</p>
+
+          <div class="reference-grid">
+            <div class="reference-card">
+              <h4>📥 Inputs</h4>
+              <ul class="param-list">
+                <li>
+                  <div>
+                    <div class="param-name">main-branch</div>
+                    <div class="param-desc">Production branch name</div>
+                    <div class="param-default">Default: main</div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">dev-branch</div>
+                    <div class="param-desc">Development branch name</div>
+                    <div class="param-default">Default: dev</div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">default-version</div>
+                    <div class="param-desc">Starting version if no tags exist</div>
+                    <div class="param-default">Default: 1.0.0</div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">update-major-minor</div>
+                    <div class="param-desc">
+                      Update floating tags (v1, v1.2)
+                    </div>
+                    <div class="param-default">Default: false</div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">git-user-name</div>
+                    <div class="param-desc">Git committer name</div>
+                    <div class="param-default">Default: github-actions[bot]</div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">git-user-email</div>
+                    <div class="param-desc">Git committer email</div>
+                    <div class="param-default">
+                      Default: github-actions[bot]@users.noreply.github.com
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="reference-card">
+              <h4>📤 Outputs</h4>
+              <ul class="param-list">
+                <li>
+                  <div>
+                    <div class="param-name">version</div>
+                    <div class="param-desc">
+                      Calculated semantic version without 'v' prefix
+                    </div>
+                    <div class="param-default">Example: 1.2.3-dev</div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">tag</div>
+                    <div class="param-desc">Git tag with 'v' prefix</div>
+                    <div class="param-default">Example: v1.2.3-dev</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="reference-card">
+              <h4>✅ Requirements</h4>
+              <ul class="param-list">
+                <li>
+                  <div>
+                    <div class="param-name">fetch-tags: true</div>
+                    <div class="param-desc">
+                      Required in checkout step to access version tags
+                    </div>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <div class="param-name">contents: write</div>
+                    <div class="param-desc">
+                      Required permission to push tags to repository
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="workflow-section">
+      <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">
+          Auto-detects your workflow context and applies the right versioning
+          strategy
+        </p>
+
+        <div class="workflow-grid">
+          <div class="workflow-card">
+            <span class="emoji">🌿</span>
+            <h3>Dev Branch</h3>
+            <p>
+              Push to dev → <code style="opacity: 0.8">v1.2.3-dev</code><br />
+              Increments patch for each commit. After production release, bumps
+              minor and resets patch.
+            </p>
+          </div>
+
+          <div class="workflow-card">
+            <span class="emoji">🔀</span>
+            <h3>Pull Requests</h3>
+            <p>
+              PR to main → <code style="opacity: 0.8">v1.2.3-rc.1</code><br />
+              PR to dev → <code style="opacity: 0.8">v1.2.3-pr-42.1</code><br />
+              Perfect for staging and preview environments.
+            </p>
+          </div>
+
+          <div class="workflow-card">
+            <span class="emoji">🚀</span>
+            <h3>Production</h3>
+            <p>
+              Push to main → <code style="opacity: 0.8">v1.2.3</code><br />
+              Strips suffix from latest dev/RC tag. Handles hotfixes
+              automatically.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>
+          <a href="https://github.com/starburst997/auto-version">GitHub</a> •
+          <a href="https://github.com/starburst997/auto-version/issues"
+            >Issues</a
+          >
+          •
+          <a href="https://github.com/starburst997/auto-version/releases"
+            >Releases</a
+          >
+        </p>
+        <p style="margin-top: 1rem; opacity: 0.7">
+          Made with 💜 for the GitHub Actions community
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

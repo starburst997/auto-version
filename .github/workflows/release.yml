@@ -22,6 +22,3 @@ jobs:
 
       - name: Generate changelog and create release
         uses: starburst997/commits-logs@v1
-        with:
-          format: grouped
-          create-release: true

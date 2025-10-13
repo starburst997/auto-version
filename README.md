@@ -13,6 +13,7 @@ Managing versions across different environments can be tedious. This action auto
 - **After production release** → Next dev commit bumps minor version and starts a new development cycle
 
 This workflow enables:
+
 - Easy deployment to Kubernetes with distinct version tags
 - Automated semantic versioning without manual intervention
 - Clear version progression from dev → rc → production

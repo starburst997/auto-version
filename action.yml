@@ -31,6 +31,22 @@ inputs:
     description: "Update major and minor version tags (e.g., v1, v1.2) to point to latest version"
     required: false
     default: "false"
+  git-push:
+    description: "Push changes and tags to remote repository"
+    required: false
+    default: "true"
+  edit-file:
+    description: "File to update with new version (e.g., action.yml). If empty, file editing is skipped"
+    required: false
+    default: ""
+  edit-search-pattern:
+    description: "Search pattern for version replacement (default uses repository name)"
+    required: false
+    default: "${{ github.repository }}:"
+  edit-commit-message:
+    description: "Commit message template for file edit (use {version} placeholder)"
+    required: false
+    default: "chore: update version to {version}"
 
 outputs:
   version:
@@ -43,6 +59,12 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Configure Git
+      shell: bash
+      run: |
+        git config user.name "${{ inputs.git-user-name }}"
+        git config user.email "${{ inputs.git-user-email }}"
+
     - name: Calculate Version
       id: calculate
       shell: bash
@@ -255,13 +277,43 @@ runs:
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
         echo "📦 Version: $VERSION"
 
-    - name: Create and Push Tag
+    - name: Update File with New Version
+      if: inputs.edit-file != ''
       shell: bash
       run: |
-        git config user.name "${{ inputs.git-user-name }}"
-        git config user.email "${{ inputs.git-user-email }}"
+        EDIT_FILE="${{ inputs.edit-file }}"
+        SEARCH_PATTERN="${{ inputs.edit-search-pattern }}"
+        VERSION="${{ steps.calculate.outputs.tag }}"
+        COMMIT_MESSAGE="${{ inputs.edit-commit-message }}"
+
+        echo "📝 Updating $EDIT_FILE with version $VERSION"
+
+        # Convert repository name to lowercase for registry compatibility
+        REPO_NAME=$(echo "$SEARCH_PATTERN" | tr '[:upper:]' '[:lower:]')
+
+        # Replace version in file using sed
+        sed -i "s|${REPO_NAME}[^\"]*|${REPO_NAME}${VERSION}|g" "$EDIT_FILE"
+
+        # Check if file was actually changed
+        if git diff --quiet "$EDIT_FILE"; then
+          echo "ℹ️  No changes to $EDIT_FILE"
+          exit 0
+        fi
+
+        # Replace {version} placeholder in commit message
+        FINAL_MESSAGE="${COMMIT_MESSAGE/\{version\}/$VERSION}"
+
+        # Commit the change
+        git add "$EDIT_FILE"
+        git commit -m "$FINAL_MESSAGE"
+
+        echo "✅ Updated $EDIT_FILE and committed changes"
+
+    - name: Create Tags
+      shell: bash
+      run: |
         git tag ${{ steps.calculate.outputs.tag }}
-        git push origin ${{ steps.calculate.outputs.tag }}
+        echo "✅ Created tag ${{ steps.calculate.outputs.tag }}"
 
     - name: Update Major/Minor Tags
       if: inputs.update-major-minor == 'true'
@@ -290,37 +342,31 @@ runs:
           production)
             # Update major version tag (e.g., v1)
             git tag -f "v${MAJOR}"
-            git push -f origin "v${MAJOR}"
 
             # Update minor version tag (e.g., v1.2)
             git tag -f "v${MAJOR}.${MINOR}"
-            git push -f origin "v${MAJOR}.${MINOR}"
 
-            echo "✅ Updated tags: v${MAJOR} and v${MAJOR}.${MINOR}"
+            echo "✅ Created tags: v${MAJOR} and v${MAJOR}.${MINOR}"
             ;;
 
           dev)
             # Update dev major version tag (e.g., v1-dev)
             git tag -f "v${MAJOR}-dev"
-            git push -f origin "v${MAJOR}-dev"
 
             # Update dev minor version tag (e.g., v1.2-dev)
             git tag -f "v${MAJOR}.${MINOR}-dev"
-            git push -f origin "v${MAJOR}.${MINOR}-dev"
 
-            echo "✅ Updated tags: v${MAJOR}-dev and v${MAJOR}.${MINOR}-dev"
+            echo "✅ Created tags: v${MAJOR}-dev and v${MAJOR}.${MINOR}-dev"
             ;;
 
           rc)
             # Update rc major version tag (e.g., v1-rc)
             git tag -f "v${MAJOR}-rc"
-            git push -f origin "v${MAJOR}-rc"
 
             # Update rc minor version tag (e.g., v1.2-rc)
             git tag -f "v${MAJOR}.${MINOR}-rc"
-            git push -f origin "v${MAJOR}.${MINOR}-rc"
 
-            echo "✅ Updated tags: v${MAJOR}-rc and v${MAJOR}.${MINOR}-rc"
+            echo "✅ Created tags: v${MAJOR}-rc and v${MAJOR}.${MINOR}-rc"
             ;;
 
           pr)
@@ -328,3 +374,11 @@ runs:
             echo "⏭️  Skipping major/minor tag update for PR version: $VERSION"
             ;;
         esac
+
+    - name: Push Changes and Tags
+      if: inputs.git-push == 'true'
+      shell: bash
+      run: |
+        echo "🚀 Pushing all changes and tags to remote repository"
+        git push --follow-tags
+        echo "✅ Successfully pushed all changes and tags"

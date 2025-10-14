@@ -202,7 +202,7 @@ jobs:
         uses: starburst997/auto-version@v1
         with:
           update-major-minor: true
-          edit-file: "action.yml" # Update action.yml if this is a GitHub Action
+          edit-file: "action.yml"
           edit-commit-message: "chore: update to {version}"
 
       - name: Create GitHub Release

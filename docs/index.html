@@ -3,7 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auto Version - Automatic Semantic Versioning for GitHub Actions</title>
+    <title>
+      Auto Version - Automatic Semantic Versioning for GitHub Actions
+    </title>
     <style>
       * {
         margin: 0;
@@ -98,7 +100,7 @@
 
       .features {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 3rem;
         margin-top: 3rem;
       }
@@ -392,8 +394,8 @@
             <div class="feature-icon">🎯</div>
             <h3>Auto-Detection</h3>
             <p>
-              Detects if you're pushing to main branch, dev branch, or creating a PR and
-              generates the right version tag automatically
+              Detects if you're pushing to main branch, dev branch, or creating
+              a PR and generates the right version tag automatically
             </p>
           </div>
 
@@ -401,8 +403,9 @@
             <div class="feature-icon">🔢</div>
             <h3>Smart Versioning</h3>
             <p>
-              Dev branch increments patch (v1.2.3-dev), PRs get unique tags (v1.2.3-rc.1 or v1.2.3-pr-123.1),
-              main branch strips suffixes (v1.2.3)
+              Dev branch increments patch (v1.2.3-dev), PRs get unique tags
+              (v1.2.3-rc.1 or v1.2.3-pr-123.1), main branch strips suffixes
+              (v1.2.3)
             </p>
           </div>
 
@@ -410,8 +413,18 @@
             <div class="feature-icon">🏷️</div>
             <h3>Git Tag Based</h3>
             <p>
-              Uses existing git tags to calculate versions. No version files,
-              no configuration files, just git tags
+              Uses existing git tags to calculate versions. No version files, no
+              configuration files, just git tags
+            </p>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">📝</div>
+            <h3>File Editing</h3>
+            <p>
+              Automatically update files with new versions (perfect for GitHub
+              Actions that reference Docker images). Optional push control for
+              advanced workflows.
             </p>
           </div>
         </div>
@@ -460,7 +473,9 @@
           <div class="journey-step">
             <div class="step-number">4</div>
             <div class="step-content">
-              <div class="step-action">Create PR from dev branch to main branch</div>
+              <div class="step-action">
+                Create PR from dev branch to main branch
+              </div>
               <div class="step-result">
                 Creates RC tag: <span class="step-version">v1.3.5-rc.1</span>
               </div>
@@ -470,7 +485,9 @@
           <div class="journey-step">
             <div class="step-number">5</div>
             <div class="step-content">
-              <div class="step-action">Merge PR to main branch (production release)</div>
+              <div class="step-action">
+                Merge PR to main branch (production release)
+              </div>
               <div class="step-result">
                 Strips suffix: <span class="step-version">v1.3.5</span>
               </div>
@@ -480,7 +497,9 @@
           <div class="journey-step">
             <div class="step-number">6</div>
             <div class="step-content">
-              <div class="step-action">Next commit to dev branch (after production release)</div>
+              <div class="step-action">
+                Next commit to dev branch (after production release)
+              </div>
               <div class="step-result">
                 Bumps minor, resets patch:
                 <span class="step-version">v1.4.0-dev</span>
@@ -491,7 +510,9 @@
           <div class="journey-step">
             <div class="step-number">7</div>
             <div class="step-content">
-              <div class="step-action">Direct commit to main branch (hotfix scenario)</div>
+              <div class="step-action">
+                Direct commit to main branch (hotfix scenario)
+              </div>
               <div class="step-result">
                 Increments patch from last production tag:
                 <span class="step-version">v1.3.6</span>
@@ -524,7 +545,8 @@
               &nbsp;&nbsp;<span class="keyword">deploy:</span><br />
               &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
               ubuntu-latest<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span
+              ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
                 >contents:</span
               >
@@ -534,7 +556,8 @@
                 >- uses:</span
               >
               <span class="string">actions/checkout@v4</span><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >with:</span
               ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
@@ -547,11 +570,13 @@
                 >- name:</span
               >
               Auto Version and Tag<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >uses:</span
               >
               <span class="string">starburst997/auto-version@v1</span><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >id:</span
               >
               version<br /><br />
@@ -560,7 +585,8 @@
                 >- name:</span
               >
               Deploy to Dev<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >run:</span
               >
               <span class="string"
@@ -583,7 +609,8 @@
               &nbsp;&nbsp;<span class="keyword">deploy:</span><br />
               &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
               ubuntu-latest<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span
+              ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
                 >contents:</span
               >
@@ -593,7 +620,8 @@
                 >- uses:</span
               >
               <span class="string">actions/checkout@v4</span><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >with:</span
               ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
@@ -606,18 +634,22 @@
                 >- name:</span
               >
               Auto Version and Tag<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >uses:</span
               >
               <span class="string">starburst997/auto-version@v1</span><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >id:</span
               >
               version<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="comment"
                 ># PR to main: v1.2.3-rc.1</span
               ><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="comment"
                 ># PR to dev: v1.2.3-pr-42.1</span
               ><br /><br />
 
@@ -625,7 +657,8 @@
                 >- name:</span
               >
               Deploy Preview<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >run:</span
               >
               <span class="string"
@@ -648,7 +681,8 @@
               &nbsp;&nbsp;<span class="keyword">deploy:</span><br />
               &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
               ubuntu-latest<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span
+              ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
                 >contents:</span
               >
@@ -658,7 +692,8 @@
                 >- uses:</span
               >
               <span class="string">actions/checkout@v4</span><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >with:</span
               ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
@@ -671,15 +706,18 @@
                 >- name:</span
               >
               Auto Version and Tag<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >uses:</span
               >
               <span class="string">starburst997/auto-version@v1</span><br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >id:</span
               >
               version<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >with:</span
               ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
@@ -693,7 +731,8 @@
                 >- name:</span
               >
               Create Release<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >env:</span
               ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
@@ -701,7 +740,8 @@
                 >GH_TOKEN:</span
               >
               ${{ github.token }}<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
                 >run:</span
               >
               |<br />
@@ -715,6 +755,89 @@
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--generate-notes
             </div>
           </div>
+
+          <div class="workflow-example">
+            <h3>🏷️ GitHub Action with File Update</h3>
+            <div class="code-block">
+              <span class="keyword">name:</span> Release Action<br /><br />
+
+              <span class="keyword">on:</span><br />
+              &nbsp;&nbsp;<span class="keyword">push:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">branches:</span>
+              [main]<br /><br />
+
+              <span class="keyword">jobs:</span><br />
+              &nbsp;&nbsp;<span class="keyword">release:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">runs-on:</span>
+              ubuntu-latest<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">permissions:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >contents:</span
+              >
+              write<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">steps:</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- uses:</span
+              >
+              <span class="string">actions/checkout@v4</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >with:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >fetch-depth:</span
+              >
+              0<br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Auto Version with File Update<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >uses:</span
+              >
+              <span class="string">starburst997/auto-version@v1</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >with:</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >update-major-minor:</span
+              >
+              <span class="string">true</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >edit-file:</span
+              >
+              <span class="string">"action.yml"</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >edit-commit-message:</span
+              >
+              <span class="string">"chore: update docker to {version}"</span
+              ><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="comment"
+                ># Automatically updates action.yml with new version</span
+              ><br /><br />
+
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"
+                >- name:</span
+              >
+              Build and Push Docker<br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+                class="keyword"
+                >run:</span
+              >
+              <span class="string"
+                >echo "Docker image will use correct version"</span
+              >
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -722,7 +845,9 @@
     <section class="reference-section">
       <div class="container">
         <h2 class="section-title">Reference</h2>
-        <p class="section-subtitle">Complete inputs and outputs documentation</p>
+        <p class="section-subtitle">
+          Complete inputs and outputs documentation
+        </p>
 
         <div class="reference-grid">
           <div class="reference-card">
@@ -762,9 +887,49 @@
 
             <div class="param-item">
               <div class="param-name">git-user-email</div>
-              <div class="param-desc">Git user email for tagging</div>
+              <div class="param-desc">
+                Git user email for tagging and commits
+              </div>
               <div class="param-default">
                 Default: github-actions[bot]@users.noreply.github.com
+              </div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">git-push</div>
+              <div class="param-desc">
+                Push changes and tags to remote repository
+              </div>
+              <div class="param-default">Default: true</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">edit-file</div>
+              <div class="param-desc">
+                File to update with new version (e.g., action.yml). If empty,
+                skipped
+              </div>
+              <div class="param-default">Default: (empty)</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">edit-search-pattern</div>
+              <div class="param-desc">
+                Search pattern for version replacement
+              </div>
+              <div class="param-default">
+                Default: ${{ github.repository }}:
+              </div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">edit-commit-message</div>
+              <div class="param-desc">
+                Commit message template for file edit (use {version}
+                placeholder)
+              </div>
+              <div class="param-default">
+                Default: chore: update version to {version}
               </div>
             </div>
           </div>

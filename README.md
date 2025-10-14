@@ -23,19 +23,25 @@ This workflow enables:
 
 - **Smart versioning**: Automatically calculates next version based on existing tags
 - **Multiple release types**: Supports production, dev, and RC workflows
+- **File editing**: Automatically update files with new version (e.g., action.yml for GitHub Actions)
+- **Flexible git operations**: Optional push control for advanced workflows
 - **Customizable**: Configure git user details and default versions
 - **Simple integration**: Drop-in replacement for manual versioning logic
 
 ## Inputs
 
-| Input                | Description                                                             | Required | Default                                        |
-| -------------------- | ----------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| `main-branch`        | Name of the main/production branch                                      | No       | `main`                                         |
-| `dev-branch`         | Name of the development branch                                          | No       | `dev`                                          |
-| `default-version`    | Default version if no tags exist                                        | No       | `1.0.0`                                        |
-| `git-user-name`      | Git user name for tagging                                               | No       | `github-actions[bot]`                          |
-| `git-user-email`     | Git user email for tagging                                              | No       | `github-actions[bot]@users.noreply.github.com` |
-| `update-major-minor` | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                                        |
+| Input                 | Description                                                             | Required | Default                                        |
+| --------------------- | ----------------------------------------------------------------------- | -------- | ---------------------------------------------- |
+| `main-branch`         | Name of the main/production branch                                      | No       | `main`                                         |
+| `dev-branch`          | Name of the development branch                                          | No       | `dev`                                          |
+| `default-version`     | Default version if no tags exist                                        | No       | `1.0.0`                                        |
+| `git-user-name`       | Git user name for tagging and commits                                   | No       | `github-actions[bot]`                          |
+| `git-user-email`      | Git user email for tagging and commits                                  | No       | `github-actions[bot]@users.noreply.github.com` |
+| `update-major-minor`  | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                                        |
+| `git-push`            | Push changes and tags to remote repository                              | No       | `true`                                         |
+| `edit-file`           | File to update with new version (e.g., `action.yml`). If empty, skipped | No       | `` (empty)                                     |
+| `edit-search-pattern` | Search pattern for version replacement                                  | No       | `${{ github.repository }}:`                    |
+| `edit-commit-message` | Commit message template for file edit (use `{version}` placeholder)     | No       | `chore: update version to {version}`           |
 
 ## Outputs
 
@@ -123,6 +129,51 @@ This updates floating tags based on release type:
 
 Users can then reference `@v1` (production), `@v1-dev` (dev), or `@v1-rc` (rc) to always get the latest version.
 
+### File Editing
+
+Automatically update files with the new version (useful for GitHub Actions that reference Docker images):
+
+```yaml
+- name: Version and Tag with File Update
+  id: version
+  uses: starburst997/auto-version@v1
+  with:
+    update-major-minor: true
+    edit-file: "action.yml"
+    edit-commit-message: "chore: update docker image to {version}"
+```
+
+This will update lines in `action.yml` that match the repository pattern:
+
+```yaml
+# Before
+image: "docker://ghcr.io/user/repo:v1"
+
+# After (if version is v1.2.3)
+image: "docker://ghcr.io/user/repo:v1.2.3"
+```
+
+### Advanced Git Control
+
+For workflows that need to control when git operations happen:
+
+```yaml
+- name: Version and Tag (No Push)
+  id: version
+  uses: starburst997/auto-version@v1
+  with:
+    git-push: false # Don't push yet
+    edit-file: "action.yml"
+
+# Run tests, builds, etc.
+- name: Run Tests
+  run: npm test
+
+# Only push if everything succeeds
+- name: Push Changes
+  run: git push --follow-tags
+```
+
 ## Full Workflow Examples
 
 ### Production Workflow
@@ -151,6 +202,8 @@ jobs:
         uses: starburst997/auto-version@v1
         with:
           update-major-minor: true
+          edit-file: "action.yml" # Update action.yml if this is a GitHub Action
+          edit-commit-message: "chore: update to {version}"
 
       - name: Create GitHub Release
         env:

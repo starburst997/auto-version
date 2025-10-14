@@ -30,18 +30,18 @@ This workflow enables:
 
 ## Inputs
 
-| Input                 | Description                                                             | Required | Default                                        |
-| --------------------- | ----------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| `main-branch`         | Name of the main/production branch                                      | No       | `main`                                         |
-| `dev-branch`          | Name of the development branch                                          | No       | `dev`                                          |
-| `default-version`     | Default version if no tags exist                                        | No       | `1.0.0`                                        |
-| `git-user-name`       | Git user name for tagging and commits                                   | No       | `github-actions[bot]`                          |
-| `git-user-email`      | Git user email for tagging and commits                                  | No       | `github-actions[bot]@users.noreply.github.com` |
-| `update-major-minor`  | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                                        |
-| `git-push`            | Push changes and tags to remote repository                              | No       | `true`                                         |
-| `edit-file`           | File to update with new version (e.g., `action.yml`). If empty, skipped | No       | `` (empty)                                     |
-| `edit-search-pattern` | Search pattern for version replacement                                  | No       | `${{ github.repository }}:`                    |
-| `edit-commit-message` | Commit message template for file edit (use `{version}` placeholder)     | No       | `chore: update version to {version}`           |
+| Input                 | Description                                                             | Required | Default                              |
+| --------------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------ |
+| `main-branch`         | Name of the main/production branch                                      | No       | `main`                               |
+| `dev-branch`          | Name of the development branch                                          | No       | `dev`                                |
+| `default-version`     | Default version if no tags exist                                        | No       | `1.0.0`                              |
+| `git-user-name`       | Git user name for tagging and commits                                   | No       | `github-actions[bot]`                |
+| `git-user-email`      | Git user email for tagging and commits                                  | No       | `...@users.noreply.github.com`       |
+| `update-major-minor`  | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                              |
+| `git-push`            | Push changes and tags to remote repository                              | No       | `true`                               |
+| `edit-file`           | File to update with new version (e.g., `action.yml`). If empty, skipped | No       | `` (empty)                           |
+| `edit-search-pattern` | Search pattern for version replacement                                  | No       | `${{ github.repository }}:`          |
+| `edit-commit-message` | Commit message template for file edit (use `{version}` placeholder)     | No       | `chore: update version to {version}` |
 
 ## Outputs
 

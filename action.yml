@@ -380,5 +380,11 @@ runs:
       shell: bash
       run: |
         echo "🚀 Pushing all changes and tags to remote repository"
-        git push --follow-tags
+
+        # Push tags only
+        git push --force origin --tags
+
+        # Push all changes
+        git push
+
         echo "✅ Successfully pushed all changes and tags"

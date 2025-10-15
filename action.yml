@@ -7,6 +7,10 @@ branding:
   color: "blue"
 
 inputs:
+  token:
+    description: "GitHub token for API operations"
+    required: false
+    default: "${{ github.token }}"
   main-branch:
     description: "Name of the main/production branch"
     required: false
@@ -285,6 +289,8 @@ runs:
     - name: Update File with New Version
       if: inputs.edit-file != ''
       shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         EDIT_FILE="${{ inputs.edit-file }}"
         SEARCH_PATTERN="${{ inputs.edit-search-pattern }}"
@@ -308,11 +314,24 @@ runs:
         # Replace {version} placeholder in commit message
         FINAL_MESSAGE="${COMMIT_MESSAGE/\{version\}/$VERSION}"
 
-        # Commit the change
-        git add "$EDIT_FILE"
-        git commit -m "$FINAL_MESSAGE"
+        # Get the current commit SHA
+        BASE_SHA=$(git rev-parse HEAD)
 
-        echo "✅ Updated $EDIT_FILE and committed changes"
+        # Read the updated file content
+        FILE_CONTENT=$(base64 -w 0 "$EDIT_FILE")
+
+        # Get the file SHA (needed for update)
+        FILE_SHA=$(gh api "repos/${{ github.repository }}/contents/$EDIT_FILE" --jq .sha)
+
+        # Create commit via GitHub API
+        gh api "repos/${{ github.repository }}/contents/$EDIT_FILE" \
+          --method PUT \
+          --field message="$FINAL_MESSAGE" \
+          --field content="$FILE_CONTENT" \
+          --field sha="$FILE_SHA" \
+          --field branch="${{ github.ref_name }}"
+
+        echo "✅ Updated $EDIT_FILE via GitHub API with verified commit"
 
     - name: Create Tags
       shell: bash

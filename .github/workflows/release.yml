@@ -10,9 +10,17 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Initialize custom bot
+        id: bot
+        uses: starburst997/custom-bot-init@v1
+        with:
+          app-id: ${{ secrets.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
+          token: ${{ steps.bot.outputs.token }}
 
       - name: Auto Version and Tag
         id: version
@@ -22,3 +30,5 @@ jobs:
 
       - name: Generate changelog and create release
         uses: starburst997/commits-logs@v1
+        with:
+          token: ${{ steps.bot.outputs.token }}

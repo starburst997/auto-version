@@ -331,6 +331,9 @@ runs:
           --field sha="$FILE_SHA" \
           --field branch="${{ github.ref_name }}"
 
+        # Get latest changes
+        git pull
+
         echo "✅ Updated $EDIT_FILE via GitHub API with verified commit"
 
     - name: Create Tags

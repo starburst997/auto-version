@@ -332,6 +332,7 @@ runs:
           --field branch="${{ github.ref_name }}"
 
         # Get latest changes
+        git checkout "$EDIT_FILE"
         git pull
 
         echo "✅ Updated $EDIT_FILE via GitHub API with verified commit"

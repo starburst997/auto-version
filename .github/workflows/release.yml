@@ -27,6 +27,7 @@ jobs:
         uses: ./
         with:
           update-major-minor: true
+          git-config: false
 
       - name: Generate changelog and create release
         uses: starburst997/commits-logs@v1

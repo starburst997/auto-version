@@ -19,6 +19,10 @@ inputs:
     description: "Default version if no tags exist"
     required: false
     default: "1.0.0"
+  git-config:
+    description: "Set git config"
+    required: false
+    default: "true"
   git-user-name:
     description: "Git user name for tagging"
     required: false
@@ -60,6 +64,7 @@ runs:
   using: "composite"
   steps:
     - name: Configure Git
+      if: inputs.git-config == 'true'
       shell: bash
       run: |
         git config user.name "${{ inputs.git-user-name }}"

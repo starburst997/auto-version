@@ -115,6 +115,34 @@ runs:
           fi
         }
 
+        # Function to check commit messages for version bump commands
+        check_commit_messages_for_bump() {
+          local last_tag=$1
+          local bump_type="patch"  # default
+
+          # Get all commits since last tag (or all commits if no tag)
+          local commits
+          if [ -n "$last_tag" ]; then
+            commits=$(git log "${last_tag}..HEAD" --format="%s %b" 2>/dev/null || true)
+          else
+            commits=$(git log --format="%s %b" 2>/dev/null || true)
+          fi
+
+          # Check for /major or /minor in commit messages
+          if echo "$commits" | grep -q "/major"; then
+            if [ "$YEARLY_MODE" == "true" ]; then
+              echo "⚠️  /major command found but ignored in yearly mode (year is controlled automatically)"
+              bump_type="minor"  # Treat as minor in yearly mode
+            else
+              bump_type="major"
+            fi
+          elif echo "$commits" | grep -q "/minor"; then
+            bump_type="minor"
+          fi
+
+          echo "$bump_type"
+        }
+
         # Detect context: PR or push, and which branch
         IS_PR="${{ github.event_name == 'pull_request' }}"
         if [ "$IS_PR" == "true" ]; then
@@ -149,21 +177,41 @@ runs:
             # Get latest stable production tag
             LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
 
+            # Check for version bump commands in commits
+            BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
+            echo "🔍 Detected bump type from commits: $BUMP_TYPE"
+
             # Get latest dev or rc tag to determine production version
             LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
             LATEST_RC_TAG=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1 || true)
 
             # Determine base version from dev/rc tags
             if [ -z "$LATEST_DEV_TAG" ] && [ -z "$LATEST_RC_TAG" ]; then
-              # No dev/rc tags exist
+              # No dev/rc tags exist (direct commits to main)
               if [ -z "$LATEST_STABLE" ]; then
                 # No tags at all, use default
                 VERSION="$DEFAULT_VERSION"
               else
-                # Only stable tags exist (direct main commits), increment patch (hotfix)
+                # Only stable tags exist (direct main commits)
                 STABLE_VER=${LATEST_STABLE#v}
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
-                PATCH=$((PATCH + 1))
+
+                # Apply bump type from commit messages
+                case "$BUMP_TYPE" in
+                  major)
+                    MAJOR=$((MAJOR + 1))
+                    MINOR=0
+                    PATCH=0
+                    ;;
+                  minor)
+                    read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+                    PATCH=0
+                    ;;
+                  patch)
+                    PATCH=$((PATCH + 1))
+                    ;;
+                esac
+
                 VERSION="${MAJOR}.${MINOR}.${PATCH}"
               fi
             else
@@ -199,6 +247,10 @@ runs:
             # Get latest dev tag
             LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
 
+            # Check for version bump commands in commits
+            BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_DEV")
+            echo "🔍 Detected bump type from commits: $BUMP_TYPE"
+
             if [ -z "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
               # No tags exist, use default
               IFS='.' read -r MAJOR MINOR PATCH <<< "$DEFAULT_VERSION"
@@ -223,16 +275,46 @@ runs:
                 read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
                 PATCH=0
               else
-                # Continue from dev, increment patch
+                # Continue from dev
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$DEV_VER"
-                PATCH=$((PATCH + 1))
+
+                # Apply bump type from commit messages
+                case "$BUMP_TYPE" in
+                  major)
+                    MAJOR=$((MAJOR + 1))
+                    MINOR=0
+                    PATCH=0
+                    ;;
+                  minor)
+                    read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+                    PATCH=0
+                    ;;
+                  patch)
+                    PATCH=$((PATCH + 1))
+                    ;;
+                esac
               fi
             else
-              # Only dev tags exist, increment patch
+              # Only dev tags exist
               VERSION=${LATEST_DEV#v}
               VERSION=${VERSION%%-*}
               IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-              PATCH=$((PATCH + 1))
+
+              # Apply bump type from commit messages
+              case "$BUMP_TYPE" in
+                major)
+                  MAJOR=$((MAJOR + 1))
+                  MINOR=0
+                  PATCH=0
+                  ;;
+                minor)
+                  read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+                  PATCH=0
+                  ;;
+                patch)
+                  PATCH=$((PATCH + 1))
+                  ;;
+              esac
             fi
 
             VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"

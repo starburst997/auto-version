@@ -23,6 +23,8 @@ This workflow enables:
 
 - **Smart versioning**: Automatically calculates next version based on existing tags
 - **Multiple release types**: Supports production, dev, and RC workflows
+- **Commit message commands**: Use `/major` or `/minor` in commits to control version bumps
+- **Yearly versioning**: Optional year-based major versions (2025.0.0 format)
 - **File editing**: Automatically update files with new version (e.g., action.yml for GitHub Actions)
 - **Flexible git operations**: Optional push control for advanced workflows
 - **Customizable**: Configure git user details and default versions
@@ -38,6 +40,7 @@ This workflow enables:
 | `git-user-name`       | Git user name for tagging and commits                                   | No       | `github-actions[bot]`                |
 | `git-user-email`      | Git user email for tagging and commits                                  | No       | `...@users.noreply.github.com`       |
 | `update-major-minor`  | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                              |
+| `yearly`              | Use year as major version (e.g., 2025.0.0) and auto-update on new year  | No       | `false`                              |
 | `git-push`            | Push changes and tags to remote repository                              | No       | `true`                               |
 | `edit-file`           | File to update with new version (e.g., `action.yml`). If empty, skipped | No       | `` (empty)                           |
 | `edit-search-pattern` | Search pattern for version replacement                                  | No       | `${{ github.repository }}:`          |
@@ -151,6 +154,30 @@ image: "docker://ghcr.io/user/repo:v1"
 
 # After (if version is v1.2.3)
 image: "docker://ghcr.io/user/repo:v1.2.3"
+```
+
+### Yearly Versioning
+
+Use the current year as the major version:
+
+```yaml
+- name: Version with Year
+  uses: starburst997/auto-version@v1
+  with:
+    yearly: true # Produces versions like 2025.0.0
+```
+
+### Commit Message Commands
+
+Control version bumps via commit messages:
+
+```yaml
+# Commit with "/minor" in message → bumps minor version
+# Commit with "/major" in message → bumps major version (ignored in yearly mode)
+# Regular commit → bumps patch version (default)
+
+- name: Version and Tag
+  uses: starburst997/auto-version@v1
 ```
 
 ### Advanced Git Control

@@ -427,6 +427,24 @@
               advanced workflows.
             </p>
           </div>
+
+          <div class="feature">
+            <div class="feature-icon">💬</div>
+            <h3>Commit Commands</h3>
+            <p>
+              Include /major or /minor in commit messages to control version
+              bumps. No configuration needed, just commit and go.
+            </p>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">📅</div>
+            <h3>Yearly Versioning</h3>
+            <p>
+              Use year as major version (2025.0.0 format). Automatically
+              updates to new year when incrementing minor version.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -875,6 +893,14 @@
               <div class="param-name">update-major-minor</div>
               <div class="param-desc">
                 Update floating tags (v1, v1.2) to point to latest version
+              </div>
+              <div class="param-default">Default: false</div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">yearly</div>
+              <div class="param-desc">
+                Use year as major version (e.g., 2025.0.0) and auto-update on new year
               </div>
               <div class="param-default">Default: false</div>
             </div>

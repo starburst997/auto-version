@@ -39,6 +39,10 @@ inputs:
     description: "Update major and minor version tags (e.g., v1, v1.2) to point to latest version"
     required: false
     default: "false"
+  yearly:
+    description: "Use year as major version (e.g., 2025.0.0) and auto-update on new year"
+    required: false
+    default: "false"
   git-push:
     description: "Push changes and tags to remote repository"
     required: false
@@ -86,6 +90,30 @@ runs:
         MAIN_BRANCH="${{ inputs.main-branch }}"
         DEV_BRANCH="${{ inputs.dev-branch }}"
         DEFAULT_VERSION="${{ inputs.default-version }}"
+        YEARLY_MODE="${{ inputs.yearly }}"
+
+        # Get current year if yearly mode is enabled
+        if [ "$YEARLY_MODE" == "true" ]; then
+          CURRENT_YEAR=$(date +%Y)
+          DEFAULT_VERSION="${CURRENT_YEAR}.0.0"
+        fi
+
+        # Helper function to handle yearly mode logic when incrementing minor
+        # If yearly mode is enabled and current year > major, update major to current year
+        handle_yearly_minor_increment() {
+          local major=$1
+          local minor=$2
+
+          if [ "$YEARLY_MODE" == "true" ]; then
+            if [ "$CURRENT_YEAR" -gt "$major" ]; then
+              echo "$CURRENT_YEAR 0"
+            else
+              echo "$major $((minor + 1))"
+            fi
+          else
+            echo "$major $((minor + 1))"
+          fi
+        }
 
         # Detect context: PR or push, and which branch
         IS_PR="${{ github.event_name == 'pull_request' }}"
@@ -154,7 +182,7 @@ runs:
               if git rev-parse "v${BASE_VERSION}" >/dev/null 2>&1; then
                 # Version already exists, increment minor (hotfix scenario)
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
-                MINOR=$((MINOR + 1))
+                read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
                 VERSION="${MAJOR}.${MINOR}.0"
                 echo "⚠️  Version ${BASE_VERSION} already exists, using ${VERSION} (hotfix)"
               else
@@ -178,7 +206,7 @@ runs:
               # Production release exists but no dev yet, bump minor
               VERSION=${LATEST_STABLE#v}
               IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-              MINOR=$((MINOR + 1))
+              read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
               PATCH=0
             elif [ -n "$LATEST_STABLE" ]; then
               # Compare versions - if stable >= dev, we just released to prod
@@ -192,7 +220,7 @@ runs:
               if [ "$NEWER" == "$STABLE_VER" ] && [ "$STABLE_VER" != "$DEV_VER" ]; then
                 # Production is newer, bump minor from stable
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
-                MINOR=$((MINOR + 1))
+                read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
                 PATCH=0
               else
                 # Continue from dev, increment patch

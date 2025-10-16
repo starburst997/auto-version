@@ -14,8 +14,8 @@ jobs:
         id: bot
         uses: starburst997/custom-bot-init@v1
         with:
-          app-id: ""
-          private-key: ""
+          app-id: ${{ secrets.BOT_ID }}
+          private-key: ${{ secrets.BOT_KEY }}
 
       - uses: actions/checkout@v4
         with:

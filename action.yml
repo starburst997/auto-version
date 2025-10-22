@@ -288,8 +288,8 @@ runs:
               # Use sort -V to compare versions
               NEWER=$(printf "%s\n%s" "$STABLE_VER" "$DEV_VER" | sort -V -r | head -n1)
 
-              if [ "$NEWER" == "$STABLE_VER" ] && [ "$STABLE_VER" != "$DEV_VER" ]; then
-                # Production is newer, bump minor from stable
+              if [ "$NEWER" == "$STABLE_VER" ]; then
+                # Production is newer or equal, bump minor from stable
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
                 read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
                 PATCH=0

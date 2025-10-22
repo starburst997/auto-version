@@ -42,17 +42,18 @@ This workflow enables:
 | `update-major-minor`  | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                              |
 | `yearly`              | Use year as major version (e.g., 2025.0.0) and auto-update on new year  | No       | `false`                              |
 | `git-push`            | Push changes and tags to remote repository                              | No       | `true`                               |
+| `no-tags`             | Skip tag creation and pushing (only calculate version)                  | No       | `false`                              |
 | `edit-file`           | File to update with new version (e.g., `action.yml`). If empty, skipped | No       | `` (empty)                           |
 | `edit-search-pattern` | Search pattern for version replacement                                  | No       | `${{ github.repository }}:`          |
 | `edit-commit-message` | Commit message template for file edit (use `{version}` placeholder)     | No       | `chore: update version to {version}` |
 
 ## Outputs
 
-| Output        | Description                                     | Example                               |
-| ------------- | ----------------------------------------------- | ------------------------------------- |
-| `version`     | Calculated version                              | `1.2.3` or `1.2.3-dev`                |
-| `tag`         | Git tag with v prefix                           | `v1.2.3` or `v1.2.3-dev`              |
-| `environment` | Environment type (production, dev, rc, pr-###)  | `production`, `dev`, `rc`, or `pr-42` |
+| Output        | Description                                    | Example                               |
+| ------------- | ---------------------------------------------- | ------------------------------------- |
+| `version`     | Calculated version                             | `1.2.3` or `1.2.3-dev`                |
+| `tag`         | Git tag with v prefix                          | `v1.2.3` or `v1.2.3-dev`              |
+| `environment` | Environment type (production, dev, rc, pr-###) | `production`, `dev`, `rc`, or `pr-42` |
 
 ## Requirements
 

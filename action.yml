@@ -47,6 +47,10 @@ inputs:
     description: "Push changes and tags to remote repository"
     required: false
     default: "true"
+  no-tags:
+    description: "Skip tag creation and pushing (only calculate version)"
+    required: false
+    default: "false"
   edit-file:
     description: "File to update with new version (e.g., action.yml). If empty, file editing is skipped"
     required: false
@@ -481,13 +485,14 @@ runs:
         echo "✅ Updated $EDIT_FILE via GitHub API with verified commit"
 
     - name: Create Tags
+      if: inputs.no-tags == 'false'
       shell: bash
       run: |
         git tag ${{ steps.calculate.outputs.tag }}
         echo "✅ Created tag ${{ steps.calculate.outputs.tag }}"
 
     - name: Update Major/Minor Tags
-      if: inputs.update-major-minor == 'true'
+      if: inputs.update-major-minor == 'true' && inputs.no-tags == 'false'
       shell: bash
       run: |
         VERSION=${{ steps.calculate.outputs.version }}
@@ -547,7 +552,7 @@ runs:
         esac
 
     - name: Push Changes and Tags
-      if: inputs.git-push == 'true'
+      if: inputs.git-push == 'true' && inputs.no-tags == 'false'
       shell: bash
       run: |
         echo "🚀 Pushing all changes and tags to remote repository"

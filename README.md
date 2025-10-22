@@ -48,10 +48,11 @@ This workflow enables:
 
 ## Outputs
 
-| Output    | Description           | Example                  |
-| --------- | --------------------- | ------------------------ |
-| `version` | Calculated version    | `1.2.3` or `1.2.3-dev`   |
-| `tag`     | Git tag with v prefix | `v1.2.3` or `v1.2.3-dev` |
+| Output        | Description                                     | Example                               |
+| ------------- | ----------------------------------------------- | ------------------------------------- |
+| `version`     | Calculated version                              | `1.2.3` or `1.2.3-dev`                |
+| `tag`         | Git tag with v prefix                           | `v1.2.3` or `v1.2.3-dev`              |
+| `environment` | Environment type (production, dev, rc, pr-###)  | `production`, `dev`, `rc`, or `pr-42` |
 
 ## Requirements
 
@@ -88,6 +89,7 @@ The action automatically detects the context (branch or PR) and generates the ap
   run: |
     echo "Version: ${{ steps.version.outputs.version }}"
     echo "Tag: ${{ steps.version.outputs.tag }}"
+    echo "Environment: ${{ steps.version.outputs.environment }}"
 ```
 
 ### Custom Branch Names

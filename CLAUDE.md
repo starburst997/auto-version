@@ -87,3 +87,23 @@ This repository uses itself for versioning via `.github/workflows/release.yml`:
 - Runs on push to main
 - Uses `update-major-minor: true` to maintain `v1` floating tag
 - Integrates with `starburst997/commits-logs@v1` for changelog generation
+
+## Documentation Requirements
+
+**IMPORTANT**: Any changes to inputs, outputs, or functionality MUST be documented in both:
+
+1. **README.md** - User-facing documentation with:
+   - Updated inputs/outputs tables
+   - Usage examples showing new features
+   - Clear descriptions and default values
+
+2. **docs/index.html** - Website documentation with:
+   - Updated reference cards for inputs/outputs
+   - Workflow examples if applicable
+   - Consistent styling with existing content
+
+When adding new inputs or outputs:
+- Add to the appropriate table in README.md
+- Add to the corresponding reference card in docs/index.html
+- Include examples demonstrating usage
+- Update CLAUDE.md if implementation details change

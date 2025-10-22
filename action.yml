@@ -67,6 +67,9 @@ outputs:
   tag:
     description: "Git tag (e.g., v1.2.3 or v1.2.3-dev)"
     value: ${{ steps.calculate.outputs.tag }}
+  environment:
+    description: "Environment type (production, dev, rc, or pr-###)"
+    value: ${{ steps.calculate.outputs.environment }}
 
 runs:
   using: "composite"
@@ -404,9 +407,27 @@ runs:
             ;;
         esac
 
+        # Determine environment output
+        case "$RELEASE_TYPE" in
+          production)
+            ENVIRONMENT="production"
+            ;;
+          dev)
+            ENVIRONMENT="dev"
+            ;;
+          rc)
+            ENVIRONMENT="rc"
+            ;;
+          pr)
+            ENVIRONMENT="pr-${PR_NUMBER}"
+            ;;
+        esac
+
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+        echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
         echo "📦 Version: $VERSION"
+        echo "🌍 Environment: $ENVIRONMENT"
 
     - name: Update File with New Version
       if: inputs.edit-file != ''

@@ -63,6 +63,10 @@ inputs:
     description: "Commit message template for file edit (use {version} placeholder)"
     required: false
     default: "chore: update version to {version}"
+  update-version-files:
+    description: "Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing"
+    required: false
+    default: "true"
 
 outputs:
   version:
@@ -483,6 +487,82 @@ runs:
         git pull
 
         echo "✅ Updated $EDIT_FILE via GitHub API with verified commit"
+
+    - name: Update Version Files
+      if: inputs.update-version-files == 'true'
+      shell: bash
+      run: |
+        VERSION="${{ steps.calculate.outputs.version }}"
+
+        echo "📝 Updating version files with version $VERSION"
+
+        # JavaScript/TypeScript - package.json
+        if [ -f "package.json" ]; then
+          echo "  Updating package.json"
+          sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
+        fi
+
+        # Python - pyproject.toml
+        if [ -f "pyproject.toml" ]; then
+          echo "  Updating pyproject.toml"
+          sed -i "s/^version *= *\"[^\"]*\"/version = \"$VERSION\"/g" pyproject.toml
+        fi
+
+        # Python - setup.py
+        if [ -f "setup.py" ]; then
+          echo "  Updating setup.py"
+          sed -i "s/version=['\"][^'\"]*['\"]/version='$VERSION'/g" setup.py
+        fi
+
+        # Rust - Cargo.toml
+        if [ -f "Cargo.toml" ]; then
+          echo "  Updating Cargo.toml"
+          sed -i "s/^version *= *\"[^\"]*\"/version = \"$VERSION\"/g" Cargo.toml
+        fi
+
+        # Go - VERSION file (common pattern)
+        if [ -f "VERSION" ]; then
+          echo "  Updating VERSION"
+          echo "$VERSION" > VERSION
+        fi
+
+        # Ruby - gemspec files
+        if ls *.gemspec 1> /dev/null 2>&1; then
+          for file in *.gemspec; do
+            echo "  Updating $file"
+            sed -i "s/\.version *= *['\"][^'\"]*['\"]/\.version = '$VERSION'/g" "$file"
+          done
+        fi
+
+        # PHP - composer.json
+        if [ -f "composer.json" ]; then
+          echo "  Updating composer.json"
+          sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/g" composer.json
+        fi
+
+        # .NET - *.csproj files
+        if ls *.csproj 1> /dev/null 2>&1; then
+          for file in *.csproj; do
+            echo "  Updating $file"
+            sed -i "s|<Version>[^<]*</Version>|<Version>$VERSION</Version>|g" "$file"
+            sed -i "s|<AssemblyVersion>[^<]*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|g" "$file"
+            sed -i "s|<FileVersion>[^<]*</FileVersion>|<FileVersion>$VERSION</FileVersion>|g" "$file"
+          done
+        fi
+
+        # Gradle - gradle.properties
+        if [ -f "gradle.properties" ]; then
+          echo "  Updating gradle.properties"
+          sed -i "s/^version *= *[^ ]*/version=$VERSION/g" gradle.properties
+        fi
+
+        # Maven - pom.xml (first occurrence only, to avoid changing dependency versions)
+        if [ -f "pom.xml" ]; then
+          echo "  Updating pom.xml"
+          sed -i "0,/<version>[^<]*<\/version>/s|<version>[^<]*</version>|<version>$VERSION</version>|" pom.xml
+        fi
+
+        echo "✅ Version files updated (not committed)"
 
     - name: Create Tags
       if: inputs.no-tags == 'false'

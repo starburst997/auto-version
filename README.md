@@ -32,20 +32,21 @@ This workflow enables:
 
 ## Inputs
 
-| Input                 | Description                                                             | Required | Default                              |
-| --------------------- | ----------------------------------------------------------------------- | -------- | ------------------------------------ |
-| `main-branch`         | Name of the main/production branch                                      | No       | `main`                               |
-| `dev-branch`          | Name of the development branch                                          | No       | `dev`                                |
-| `default-version`     | Default version if no tags exist                                        | No       | `1.0.0`                              |
-| `git-user-name`       | Git user name for tagging and commits                                   | No       | `github-actions[bot]`                |
-| `git-user-email`      | Git user email for tagging and commits                                  | No       | `...@users.noreply.github.com`       |
-| `update-major-minor`  | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version | No       | `false`                              |
-| `yearly`              | Use year as major version (e.g., 2025.0.0) and auto-update on new year  | No       | `false`                              |
-| `git-push`            | Push changes and tags to remote repository                              | No       | `true`                               |
-| `no-tags`             | Skip tag creation and pushing (only calculate version)                  | No       | `false`                              |
-| `edit-file`           | File to update with new version (e.g., `action.yml`). If empty, skipped | No       | `` (empty)                           |
-| `edit-search-pattern` | Search pattern for version replacement                                  | No       | `${{ github.repository }}:`          |
-| `edit-commit-message` | Commit message template for file edit (use `{version}` placeholder)     | No       | `chore: update version to {version}` |
+| Input                  | Description                                                                                                  | Required | Default                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | ------------------------------------ |
+| `main-branch`          | Name of the main/production branch                                                                           | No       | `main`                               |
+| `dev-branch`           | Name of the development branch                                                                               | No       | `dev`                                |
+| `default-version`      | Default version if no tags exist                                                                             | No       | `1.0.0`                              |
+| `git-user-name`        | Git user name for tagging and commits                                                                        | No       | `github-actions[bot]`                |
+| `git-user-email`       | Git user email for tagging and commits                                                                       | No       | `...@users.noreply.github.com`       |
+| `update-major-minor`   | Update major/minor tags (e.g., `v1`, `v1.2`) to point to latest version                                      | No       | `false`                              |
+| `yearly`               | Use year as major version (e.g., 2025.0.0) and auto-update on new year                                       | No       | `false`                              |
+| `git-push`             | Push changes and tags to remote repository                                                                   | No       | `true`                               |
+| `no-tags`              | Skip tag creation and pushing (only calculate version)                                                       | No       | `false`                              |
+| `edit-file`            | File to update with new version (e.g., `action.yml`). If empty, skipped                                      | No       | `` (empty)                           |
+| `edit-search-pattern`  | Search pattern for version replacement                                                                       | No       | `${{ github.repository }}:`          |
+| `edit-commit-message`  | Commit message template for file edit (use `{version}` placeholder)                                          | No       | `chore: update version to {version}` |
+| `update-version-files` | Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing | No       | `true`                               |
 
 ## Outputs
 
@@ -157,6 +158,39 @@ image: "docker://ghcr.io/user/repo:v1"
 
 # After (if version is v1.2.3)
 image: "docker://ghcr.io/user/repo:v1.2.3"
+```
+
+### Automatic Version File Updates
+
+By default, the action automatically updates version numbers in common project files **without committing** the changes. This is useful for build processes that need the correct version in compiled artifacts:
+
+```yaml
+- name: Version and Tag
+  id: version
+  uses: starburst997/auto-version@v1
+  # update-version-files defaults to true
+```
+
+Supported files:
+
+- **JavaScript/TypeScript**: `package.json`
+- **Python**: `pyproject.toml`, `setup.py`
+- **Rust**: `Cargo.toml`
+- **Go**: `VERSION` file
+- **Ruby**: `*.gemspec` files
+- **PHP**: `composer.json`
+- **.NET**: `*.csproj` files (Version, AssemblyVersion, FileVersion)
+- **Gradle**: `gradle.properties`
+- **Maven**: `pom.xml`
+
+To disable this behavior:
+
+```yaml
+- name: Version and Tag
+  id: version
+  uses: starburst997/auto-version@v1
+  with:
+    update-version-files: false
 ```
 
 ### Yearly Versioning

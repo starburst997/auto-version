@@ -51,11 +51,13 @@ This workflow enables:
 
 ## Outputs
 
-| Output        | Description                                    | Example                               |
-| ------------- | ---------------------------------------------- | ------------------------------------- |
-| `version`     | Calculated version                             | `1.2.3` or `1.2.3-dev`                |
-| `tag`         | Git tag with v prefix                          | `v1.2.3` or `v1.2.3-dev`              |
-| `environment` | Environment type (production, dev, rc, pr-###) | `production`, `dev`, `rc`, or `pr-42` |
+| Output           | Description                                                              | Example                               |
+| ---------------- | ------------------------------------------------------------------------ | ------------------------------------- |
+| `version`        | Calculated version                                                       | `1.2.3` or `1.2.3-dev`                |
+| `tag`            | Git tag with v prefix                                                    | `v1.2.3` or `v1.2.3-dev`              |
+| `environment`    | Environment type                                                         | `production`, `dev`, `staging`, `pr-42` |
+| `suffix`         | Version suffix (empty for production)                                    | `dev`, `rc`, `pr-42`, or empty       |
+| `future-version` | Actual semantic version for transient environments (RC/PR) before 0.0.0  | `1.2.3` (when version is `0.0.0-rc.1`) |
 
 ## Requirements
 
@@ -93,6 +95,7 @@ The action automatically detects the context (branch or PR) and generates the ap
     echo "Version: ${{ steps.version.outputs.version }}"
     echo "Tag: ${{ steps.version.outputs.tag }}"
     echo "Environment: ${{ steps.version.outputs.environment }}"
+    echo "Future Version: ${{ steps.version.outputs.future-version }}"
 ```
 
 ### Custom Branch Names

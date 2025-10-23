@@ -1004,10 +1004,30 @@
             <div class="param-item">
               <div class="param-name">environment</div>
               <div class="param-desc">
-                Environment type (production, dev, rc, or pr-###)
+                Environment type
               </div>
               <div class="param-default">
-                Example: production, dev, rc, or pr-42
+                Example: production, dev, staging, or pr-42
+              </div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">suffix</div>
+              <div class="param-desc">
+                Version suffix (empty for production)
+              </div>
+              <div class="param-default">
+                Example: dev, rc, pr-42, or empty
+              </div>
+            </div>
+
+            <div class="param-item">
+              <div class="param-name">future-version</div>
+              <div class="param-desc">
+                Actual semantic version for transient environments (RC/PR) before 0.0.0
+              </div>
+              <div class="param-default">
+                Example: 1.2.3 (when version is 0.0.0-rc.1)
               </div>
             </div>
           </div>

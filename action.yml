@@ -351,30 +351,8 @@ runs:
             ;;
 
           rc)
-            # Get latest dev or stable version tag to base our version on
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-
-            # Use the most recent version as base
-            if [ -n "$LATEST_DEV" ]; then
-              LATEST_TAG=$LATEST_DEV
-            elif [ -n "$LATEST_STABLE" ]; then
-              LATEST_TAG=$LATEST_STABLE
-            else
-              LATEST_TAG=""
-            fi
-
-            if [ -z "$LATEST_TAG" ]; then
-              MAJOR=1
-              MINOR=0
-              PATCH=0
-            else
-              VERSION_STR=${LATEST_TAG#v}
-              VERSION_STR=${VERSION_STR%%-*}
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_STR"
-            fi
-
-            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            # Use 0.0.0 as base for transient RC versions
+            BASE_VERSION="0.0.0"
 
             # Count existing rc tags for this base version
             RC_COUNT=$(git tag -l "v${BASE_VERSION}-rc.*" 2>/dev/null | wc -l | tr -d ' ')
@@ -384,30 +362,8 @@ runs:
             ;;
 
           pr)
-            # Get latest dev or stable version tag to base our version on
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-
-            # Use the most recent version as base
-            if [ -n "$LATEST_DEV" ]; then
-              LATEST_TAG=$LATEST_DEV
-            elif [ -n "$LATEST_STABLE" ]; then
-              LATEST_TAG=$LATEST_STABLE
-            else
-              LATEST_TAG=""
-            fi
-
-            if [ -z "$LATEST_TAG" ]; then
-              MAJOR=1
-              MINOR=0
-              PATCH=0
-            else
-              VERSION_STR=${LATEST_TAG#v}
-              VERSION_STR=${VERSION_STR%%-*}
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_STR"
-            fi
-
-            BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            # Use 0.0.0 as base for transient PR versions
+            BASE_VERSION="0.0.0"
 
             # Count existing pr tags for this PR number and base version
             PR_COUNT=$(git tag -l "v${BASE_VERSION}-pr-${PR_NUMBER}.*" 2>/dev/null | wc -l | tr -d ' ')

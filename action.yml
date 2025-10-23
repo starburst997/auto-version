@@ -67,6 +67,10 @@ inputs:
     description: "Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing"
     required: false
     default: "true"
+  version-file-paths:
+    description: "Additional paths to search for version files (space or newline separated, e.g., 'packages/app packages/lib' or multiline). Useful for monorepos"
+    required: false
+    default: ""
 
 outputs:
   version:
@@ -493,75 +497,111 @@ runs:
       shell: bash
       run: |
         VERSION="${{ steps.calculate.outputs.version }}"
+        ADDITIONAL_PATHS="${{ inputs.version-file-paths }}"
 
         echo "📝 Updating version files with version $VERSION"
 
-        # JavaScript/TypeScript - package.json
-        if [ -f "package.json" ]; then
-          echo "  Updating package.json"
-          sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/g" package.json
-        fi
+        # Function to update version files in a given directory
+        update_version_files_in_dir() {
+          local dir="$1"
+          local prefix="${2:+$2/}"  # Add trailing slash if prefix is not empty
 
-        # Python - pyproject.toml
-        if [ -f "pyproject.toml" ]; then
-          echo "  Updating pyproject.toml"
-          sed -i "s/^version *= *\"[^\"]*\"/version = \"$VERSION\"/g" pyproject.toml
-        fi
+          # JavaScript/TypeScript - package.json
+          if [ -f "${dir}/package.json" ]; then
+            echo "  Updating ${prefix}package.json"
+            sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/g" "${dir}/package.json"
+          fi
 
-        # Python - setup.py
-        if [ -f "setup.py" ]; then
-          echo "  Updating setup.py"
-          sed -i "s/version=['\"][^'\"]*['\"]/version='$VERSION'/g" setup.py
-        fi
+          # Python - pyproject.toml
+          if [ -f "${dir}/pyproject.toml" ]; then
+            echo "  Updating ${prefix}pyproject.toml"
+            sed -i "s/^version *= *\"[^\"]*\"/version = \"$VERSION\"/g" "${dir}/pyproject.toml"
+          fi
 
-        # Rust - Cargo.toml
-        if [ -f "Cargo.toml" ]; then
-          echo "  Updating Cargo.toml"
-          sed -i "s/^version *= *\"[^\"]*\"/version = \"$VERSION\"/g" Cargo.toml
-        fi
+          # Python - setup.py
+          if [ -f "${dir}/setup.py" ]; then
+            echo "  Updating ${prefix}setup.py"
+            sed -i "s/version=['\"][^'\"]*['\"]/version='$VERSION'/g" "${dir}/setup.py"
+          fi
 
-        # Go - VERSION file (common pattern)
-        if [ -f "VERSION" ]; then
-          echo "  Updating VERSION"
-          echo "$VERSION" > VERSION
-        fi
+          # Rust - Cargo.toml
+          if [ -f "${dir}/Cargo.toml" ]; then
+            echo "  Updating ${prefix}Cargo.toml"
+            sed -i "s/^version *= *\"[^\"]*\"/version = \"$VERSION\"/g" "${dir}/Cargo.toml"
+          fi
 
-        # Ruby - gemspec files
-        if ls *.gemspec 1> /dev/null 2>&1; then
-          for file in *.gemspec; do
-            echo "  Updating $file"
-            sed -i "s/\.version *= *['\"][^'\"]*['\"]/\.version = '$VERSION'/g" "$file"
+          # Go - VERSION file (common pattern)
+          if [ -f "${dir}/VERSION" ]; then
+            echo "  Updating ${prefix}VERSION"
+            echo "$VERSION" > "${dir}/VERSION"
+          fi
+
+          # Ruby - gemspec files
+          if ls "${dir}"/*.gemspec 1> /dev/null 2>&1; then
+            for file in "${dir}"/*.gemspec; do
+              local filename=$(basename "$file")
+              echo "  Updating ${prefix}${filename}"
+              sed -i "s/\.version *= *['\"][^'\"]*['\"]/\.version = '$VERSION'/g" "$file"
+            done
+          fi
+
+          # PHP - composer.json
+          if [ -f "${dir}/composer.json" ]; then
+            echo "  Updating ${prefix}composer.json"
+            sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/g" "${dir}/composer.json"
+          fi
+
+          # .NET - *.csproj files
+          if ls "${dir}"/*.csproj 1> /dev/null 2>&1; then
+            for file in "${dir}"/*.csproj; do
+              local filename=$(basename "$file")
+              echo "  Updating ${prefix}${filename}"
+              sed -i "s|<Version>[^<]*</Version>|<Version>$VERSION</Version>|g" "$file"
+              sed -i "s|<AssemblyVersion>[^<]*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|g" "$file"
+              sed -i "s|<FileVersion>[^<]*</FileVersion>|<FileVersion>$VERSION</FileVersion>|g" "$file"
+            done
+          fi
+
+          # Gradle - gradle.properties
+          if [ -f "${dir}/gradle.properties" ]; then
+            echo "  Updating ${prefix}gradle.properties"
+            sed -i "s/^version *= *[^ ]*/version=$VERSION/g" "${dir}/gradle.properties"
+          fi
+
+          # Maven - pom.xml (first occurrence only, to avoid changing dependency versions)
+          if [ -f "${dir}/pom.xml" ]; then
+            echo "  Updating ${prefix}pom.xml"
+            sed -i "0,/<version>[^<]*<\/version>/s|<version>[^<]*</version>|<version>$VERSION</version>|" "${dir}/pom.xml"
+          fi
+        }
+
+        # Update version files in root directory
+        update_version_files_in_dir "." ""
+
+        # Process additional paths if specified
+        if [ -n "$ADDITIONAL_PATHS" ]; then
+          # Convert multiline input to single line with spaces
+          PATHS=$(echo "$ADDITIONAL_PATHS" | tr '\n' ' ')
+
+          # Iterate over each path
+          for path in $PATHS; do
+            # Skip empty paths
+            if [ -z "$path" ]; then
+              continue
+            fi
+
+            # Check if directory exists
+            if [ -d "$path" ]; then
+              echo ""
+              echo "📂 Processing additional path: $path"
+              update_version_files_in_dir "$path" "$path"
+            else
+              echo "⚠️  Warning: Path '$path' does not exist, skipping"
+            fi
           done
         fi
 
-        # PHP - composer.json
-        if [ -f "composer.json" ]; then
-          echo "  Updating composer.json"
-          sed -i "s/\"version\": *\"[^\"]*\"/\"version\": \"$VERSION\"/g" composer.json
-        fi
-
-        # .NET - *.csproj files
-        if ls *.csproj 1> /dev/null 2>&1; then
-          for file in *.csproj; do
-            echo "  Updating $file"
-            sed -i "s|<Version>[^<]*</Version>|<Version>$VERSION</Version>|g" "$file"
-            sed -i "s|<AssemblyVersion>[^<]*</AssemblyVersion>|<AssemblyVersion>$VERSION</AssemblyVersion>|g" "$file"
-            sed -i "s|<FileVersion>[^<]*</FileVersion>|<FileVersion>$VERSION</FileVersion>|g" "$file"
-          done
-        fi
-
-        # Gradle - gradle.properties
-        if [ -f "gradle.properties" ]; then
-          echo "  Updating gradle.properties"
-          sed -i "s/^version *= *[^ ]*/version=$VERSION/g" gradle.properties
-        fi
-
-        # Maven - pom.xml (first occurrence only, to avoid changing dependency versions)
-        if [ -f "pom.xml" ]; then
-          echo "  Updating pom.xml"
-          sed -i "0,/<version>[^<]*<\/version>/s|<version>[^<]*</version>|<version>$VERSION</version>|" pom.xml
-        fi
-
+        echo ""
         echo "✅ Version files updated (not committed)"
 
     - name: Create Tags

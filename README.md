@@ -47,6 +47,7 @@ This workflow enables:
 | `edit-search-pattern`  | Search pattern for version replacement                                                                       | No       | `${{ github.repository }}:`          |
 | `edit-commit-message`  | Commit message template for file edit (use `{version}` placeholder)                                          | No       | `chore: update version to {version}` |
 | `update-version-files` | Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing | No       | `true`                               |
+| `version-file-paths`   | Additional paths to search for version files (space or newline separated). Useful for monorepos              | No       | `` (empty)                           |
 
 ## Outputs
 
@@ -191,6 +192,29 @@ To disable this behavior:
   uses: starburst997/auto-version@v1
   with:
     update-version-files: false
+```
+
+For monorepos, you can specify additional paths to search for version files:
+
+```yaml
+- name: Version and Tag
+  id: version
+  uses: starburst997/auto-version@v1
+  with:
+    version-file-paths: |
+      packages/app
+      packages/lib
+      services/api
+```
+
+Or as a single line:
+
+```yaml
+- name: Version and Tag
+  id: version
+  uses: starburst997/auto-version@v1
+  with:
+    version-file-paths: "packages/app packages/lib services/api"
 ```
 
 ### Yearly Versioning

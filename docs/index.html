@@ -403,9 +403,9 @@
             <div class="feature-icon">🔢</div>
             <h3>Smart Versioning</h3>
             <p>
-              Dev branch increments patch (v1.2.3-dev), PRs get unique tags
-              (v1.2.3-rc.1 or v1.2.3-pr-123.1), main branch strips suffixes
-              (v1.2.3)
+              Dev branch increments patch (v1.2.3-dev), PRs get transient tags
+              (v0.0.0-rc.1 or v0.0.0-pr-123.1), main branch creates production
+              versions (v1.2.3)
             </p>
           </div>
 
@@ -472,8 +472,8 @@
             <div class="step-content">
               <div class="step-action">Create PR to dev branch</div>
               <div class="step-result">
-                Creates preview tag:
-                <span class="step-version">v1.3.4-pr-42.1</span>
+                Creates transient preview tag:
+                <span class="step-version">v0.0.0-pr-42.1</span>
               </div>
             </div>
           </div>
@@ -495,7 +495,7 @@
                 Create PR from dev branch to main branch
               </div>
               <div class="step-result">
-                Creates RC tag: <span class="step-version">v1.3.5-rc.1</span>
+                Creates transient RC tag: <span class="step-version">v0.0.0-rc.1</span>
               </div>
             </div>
           </div>
@@ -664,11 +664,11 @@
               version<br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
                 class="comment"
-                ># PR to main: v1.2.3-rc.1</span
+                ># PR to main: v0.0.0-rc.1</span
               ><br />
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
                 class="comment"
-                ># PR to dev: v1.2.3-pr-42.1</span
+                ># PR to dev: v0.0.0-pr-42.1</span
               ><br /><br />
 
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword"

@@ -7,8 +7,8 @@ Automatically manage semantic versions based on git tags for production, dev, an
 Managing versions across different environments can be tedious. This action automates the entire versioning workflow:
 
 - **Dev branch commits** → `v1.2.3-dev` - Automatically increment patch for each dev deployment
-- **PR to dev** → `v1.2.3-pr-123.1` - Unique versions for PR preview environments
-- **PR to main** → `v1.2.3-rc.1` - Release candidates for staging environments
+- **PR to dev** → `v0.0.0-pr-123.1` - Transient versions for PR preview environments
+- **PR to main** → `v0.0.0-rc.1` - Transient release candidates for staging environments
 - **Main branch** → `v1.2.3` - Production releases that strip the suffix from dev/rc versions
 - **After production release** → Next dev commit bumps minor version and starts a new development cycle
 
@@ -133,9 +133,9 @@ This updates floating tags based on release type:
 
 - **Production**: `v1` and `v1.2` → point to `v1.2.3`
 - **Dev**: `v1-dev` and `v1.2-dev` → point to `v1.2.3-dev`
-- **RC**: `v1-rc` and `v1.2-rc` → point to `v1.2.3-rc.1`
+- **RC/PR**: Floating tags skipped (transient versions use 0.0.0)
 
-Users can then reference `@v1` (production), `@v1-dev` (dev), or `@v1-rc` (rc) to always get the latest version.
+Users can then reference `@v1` (production) or `@v1-dev` (dev) to always get the latest version.
 
 ### File Editing
 
@@ -369,8 +369,8 @@ jobs:
       - name: Build and Deploy
         run: |
           echo "Building version ${{ steps.version.outputs.version }}"
-          # PR to main: v1.2.3-rc.1 (staging)
-          # PR to dev: v1.2.3-pr-123.1 (preview)
+          # PR to main: v0.0.0-rc.1 (staging)
+          # PR to dev: v0.0.0-pr-123.1 (preview)
 ```
 
 ## How It Works
@@ -395,17 +395,17 @@ The action automatically detects the workflow context and determines the version
 
 ### Pull Request to Main Branch (Release Candidate)
 
-1. Gets latest dev or stable version as base
-2. Counts existing RC tags for this base version
+1. Uses 0.0.0 as base for transient RC versions
+2. Counts existing RC tags
 3. Increments RC number
-4. Creates tag: `v1.2.3-rc.1`, `v1.2.3-rc.2`, etc.
+4. Creates tag: `v0.0.0-rc.1`, `v0.0.0-rc.2`, etc.
 
 ### Pull Request to Dev Branch (PR Preview)
 
-1. Gets latest dev or stable version as base
-2. Counts existing PR tags for this PR number and base version
+1. Uses 0.0.0 as base for transient PR versions
+2. Counts existing PR tags for this PR number
 3. Increments PR build number
-4. Creates tag: `v1.2.3-pr-123.1`, `v1.2.3-pr-123.2`, etc.
+4. Creates tag: `v0.0.0-pr-123.1`, `v0.0.0-pr-123.2`, etc.
 
 ## License
 

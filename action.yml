@@ -71,6 +71,10 @@ inputs:
     description: "Additional paths to search for version files (space or newline separated, e.g., 'packages/app packages/lib' or multiline). Useful for monorepos"
     required: false
     default: ""
+  patch-reset-value:
+    description: "Value to reset PATCH to when incrementing MAJOR or MINOR (default: 1)"
+    required: false
+    default: "1"
 
 outputs:
   version:
@@ -124,6 +128,7 @@ runs:
         DEV_BRANCH="${{ inputs.dev-branch }}"
         DEFAULT_VERSION="${{ inputs.default-version }}"
         YEARLY_MODE="${{ inputs.yearly }}"
+        PATCH_RESET_VALUE="${{ inputs.patch-reset-value }}"
 
         # Get current year if yearly mode is enabled
         if [ "$YEARLY_MODE" == "true" ]; then
@@ -234,11 +239,11 @@ runs:
                   major)
                     MAJOR=$((MAJOR + 1))
                     MINOR=0
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   minor)
                     read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   patch)
                     PATCH=$((PATCH + 1))
@@ -264,7 +269,7 @@ runs:
                 # Version already exists, increment minor (hotfix scenario)
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
                 read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                VERSION="${MAJOR}.${MINOR}.0"
+                VERSION="${MAJOR}.${MINOR}.${PATCH_RESET_VALUE}"
                 echo "⚠️  Version ${BASE_VERSION} already exists, using ${VERSION} (hotfix)"
               else
                 # Version doesn't exist, use it
@@ -292,7 +297,7 @@ runs:
               VERSION=${LATEST_STABLE#v}
               IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
               read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-              PATCH=0
+              PATCH=$PATCH_RESET_VALUE
             elif [ -n "$LATEST_STABLE" ]; then
               # Compare versions - if stable >= dev, we just released to prod
               STABLE_VER=${LATEST_STABLE#v}
@@ -306,7 +311,7 @@ runs:
                 # Production is newer or equal, bump minor from stable
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
                 read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                PATCH=0
+                PATCH=$PATCH_RESET_VALUE
               else
                 # Continue from dev
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$DEV_VER"
@@ -316,11 +321,11 @@ runs:
                   major)
                     MAJOR=$((MAJOR + 1))
                     MINOR=0
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   minor)
                     read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   patch)
                     PATCH=$((PATCH + 1))
@@ -338,11 +343,11 @@ runs:
                 major)
                   MAJOR=$((MAJOR + 1))
                   MINOR=0
-                  PATCH=0
+                  PATCH=$PATCH_RESET_VALUE
                   ;;
                 minor)
                   read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                  PATCH=0
+                  PATCH=$PATCH_RESET_VALUE
                   ;;
                 patch)
                   PATCH=$((PATCH + 1))

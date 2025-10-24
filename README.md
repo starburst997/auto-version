@@ -48,6 +48,7 @@ This workflow enables:
 | `edit-commit-message`  | Commit message template for file edit (use `{version}` placeholder)                                          | No       | `chore: update version to {version}` |
 | `update-version-files` | Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing | No       | `true`                               |
 | `version-file-paths`   | Additional paths to search for version files (space or newline separated). Useful for monorepos              | No       | `` (empty)                           |
+| `patch-reset-value`    | Value to reset PATCH to when incrementing MAJOR or MINOR                                                     | No       | `1`                                  |
 
 ## Outputs
 

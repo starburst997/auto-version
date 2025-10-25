@@ -71,6 +71,10 @@ inputs:
     description: "Additional paths to search for version files (space or newline separated, e.g., 'packages/app packages/lib' or multiline). Useful for monorepos"
     required: false
     default: ""
+  patch-reset-value:
+    description: "Value to reset PATCH to when incrementing MAJOR or MINOR (default: 1)"
+    required: false
+    default: "1"
 
 outputs:
   version:
@@ -124,6 +128,7 @@ runs:
         DEV_BRANCH="${{ inputs.dev-branch }}"
         DEFAULT_VERSION="${{ inputs.default-version }}"
         YEARLY_MODE="${{ inputs.yearly }}"
+        PATCH_RESET_VALUE="${{ inputs.patch-reset-value }}"
 
         # Get current year if yearly mode is enabled
         if [ "$YEARLY_MODE" == "true" ]; then
@@ -214,13 +219,13 @@ runs:
             BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
             echo "🔍 Detected bump type from commits: $BUMP_TYPE"
 
-            # Get latest dev or rc tag to determine production version
+            # Get latest dev tag to determine production version (NOT rc tags!)
+            # RC tags are for PRs to main, not for regular dev->main merges
             LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-            LATEST_RC_TAG=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1 || true)
 
-            # Determine base version from dev/rc tags
-            if [ -z "$LATEST_DEV_TAG" ] && [ -z "$LATEST_RC_TAG" ]; then
-              # No dev/rc tags exist (direct commits to main)
+            # Determine base version from dev tag
+            if [ -z "$LATEST_DEV_TAG" ]; then
+              # No dev tags exist (direct commits to main)
               if [ -z "$LATEST_STABLE" ]; then
                 # No tags at all, use default
                 VERSION="$DEFAULT_VERSION"
@@ -234,11 +239,11 @@ runs:
                   major)
                     MAJOR=$((MAJOR + 1))
                     MINOR=0
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   minor)
                     read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   patch)
                     PATCH=$((PATCH + 1))
@@ -248,12 +253,8 @@ runs:
                 VERSION="${MAJOR}.${MINOR}.${PATCH}"
               fi
             else
-              # Use latest dev or rc tag
-              if [ -n "$LATEST_RC_TAG" ]; then
-                LATEST_TAG=$LATEST_RC_TAG
-              else
-                LATEST_TAG=$LATEST_DEV_TAG
-              fi
+              # Use latest dev tag (from dev->main merge)
+              LATEST_TAG=$LATEST_DEV_TAG
 
               # Strip 'v' and suffix to get base version
               BASE_VERSION=${LATEST_TAG#v}
@@ -264,7 +265,7 @@ runs:
                 # Version already exists, increment minor (hotfix scenario)
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
                 read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                VERSION="${MAJOR}.${MINOR}.0"
+                VERSION="${MAJOR}.${MINOR}.${PATCH_RESET_VALUE}"
                 echo "⚠️  Version ${BASE_VERSION} already exists, using ${VERSION} (hotfix)"
               else
                 # Version doesn't exist, use it
@@ -292,7 +293,7 @@ runs:
               VERSION=${LATEST_STABLE#v}
               IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
               read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-              PATCH=0
+              PATCH=$PATCH_RESET_VALUE
             elif [ -n "$LATEST_STABLE" ]; then
               # Compare versions - if stable >= dev, we just released to prod
               STABLE_VER=${LATEST_STABLE#v}
@@ -306,7 +307,7 @@ runs:
                 # Production is newer or equal, bump minor from stable
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
                 read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                PATCH=0
+                PATCH=$PATCH_RESET_VALUE
               else
                 # Continue from dev
                 IFS='.' read -r MAJOR MINOR PATCH <<< "$DEV_VER"
@@ -316,11 +317,11 @@ runs:
                   major)
                     MAJOR=$((MAJOR + 1))
                     MINOR=0
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   minor)
                     read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                    PATCH=0
+                    PATCH=$PATCH_RESET_VALUE
                     ;;
                   patch)
                     PATCH=$((PATCH + 1))
@@ -338,11 +339,11 @@ runs:
                 major)
                   MAJOR=$((MAJOR + 1))
                   MINOR=0
-                  PATCH=0
+                  PATCH=$PATCH_RESET_VALUE
                   ;;
                 minor)
                   read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                  PATCH=0
+                  PATCH=$PATCH_RESET_VALUE
                   ;;
                 patch)
                   PATCH=$((PATCH + 1))

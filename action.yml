@@ -219,13 +219,13 @@ runs:
             BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
             echo "🔍 Detected bump type from commits: $BUMP_TYPE"
 
-            # Get latest dev or rc tag to determine production version
+            # Get latest dev tag to determine production version (NOT rc tags!)
+            # RC tags are for PRs to main, not for regular dev->main merges
             LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-            LATEST_RC_TAG=$(git tag -l "v*-rc.*" --sort=-version:refname | head -n1 || true)
 
-            # Determine base version from dev/rc tags
-            if [ -z "$LATEST_DEV_TAG" ] && [ -z "$LATEST_RC_TAG" ]; then
-              # No dev/rc tags exist (direct commits to main)
+            # Determine base version from dev tag
+            if [ -z "$LATEST_DEV_TAG" ]; then
+              # No dev tags exist (direct commits to main)
               if [ -z "$LATEST_STABLE" ]; then
                 # No tags at all, use default
                 VERSION="$DEFAULT_VERSION"
@@ -253,12 +253,8 @@ runs:
                 VERSION="${MAJOR}.${MINOR}.${PATCH}"
               fi
             else
-              # Use latest dev or rc tag
-              if [ -n "$LATEST_RC_TAG" ]; then
-                LATEST_TAG=$LATEST_RC_TAG
-              else
-                LATEST_TAG=$LATEST_DEV_TAG
-              fi
+              # Use latest dev tag (from dev->main merge)
+              LATEST_TAG=$LATEST_DEV_TAG
 
               # Strip 'v' and suffix to get base version
               BASE_VERSION=${LATEST_TAG#v}

@@ -181,6 +181,154 @@ runs:
           echo "$bump_type"
         }
 
+        # Function to calculate production version
+        # Returns the version that would be used for a production release
+        calculate_production_version() {
+          # Get latest stable production tag
+          local LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
+
+          # Check for version bump commands in commits
+          local BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
+
+          # Get latest dev tag to determine production version (NOT rc tags!)
+          # RC tags are for PRs to main, not for regular dev->main merges
+          local LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
+
+          # Determine base version from dev tag
+          if [ -z "$LATEST_DEV_TAG" ]; then
+            # No dev tags exist (direct commits to main)
+            if [ -z "$LATEST_STABLE" ]; then
+              # No tags at all, use default
+              echo "$DEFAULT_VERSION"
+            else
+              # Only stable tags exist (direct main commits)
+              local STABLE_VER=${LATEST_STABLE#v}
+              local MAJOR MINOR PATCH
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
+
+              # Apply bump type from commit messages
+              case "$BUMP_TYPE" in
+                major)
+                  MAJOR=$((MAJOR + 1))
+                  MINOR=0
+                  PATCH=$PATCH_RESET_VALUE
+                  ;;
+                minor)
+                  read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+                  PATCH=$PATCH_RESET_VALUE
+                  ;;
+                patch)
+                  PATCH=$((PATCH + 1))
+                  ;;
+              esac
+
+              echo "${MAJOR}.${MINOR}.${PATCH}"
+            fi
+          else
+            # Use latest dev tag (from dev->main merge)
+            local LATEST_TAG=$LATEST_DEV_TAG
+
+            # Strip 'v' and suffix to get base version
+            local BASE_VERSION=${LATEST_TAG#v}
+            BASE_VERSION=${BASE_VERSION%%-*}
+
+            # Check if this version already exists as stable
+            if git rev-parse "v${BASE_VERSION}" >/dev/null 2>&1; then
+              # Version already exists, increment minor (hotfix scenario)
+              local MAJOR MINOR PATCH
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+              read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+              echo "${MAJOR}.${MINOR}.${PATCH_RESET_VALUE}"
+            else
+              # Version doesn't exist, use it
+              echo "$BASE_VERSION"
+            fi
+          fi
+        }
+
+        # Function to calculate dev version
+        # Returns the version that would be used for a dev release
+        calculate_dev_version() {
+          # Get latest stable (production) tag
+          local LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
+
+          # Get latest dev tag
+          local LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
+
+          # Check for version bump commands in commits
+          local BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_DEV")
+
+          local MAJOR MINOR PATCH
+
+          if [ -z "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
+            # No tags exist, use default
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$DEFAULT_VERSION"
+          elif [ -n "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
+            # Production release exists but no dev yet, bump minor
+            local VERSION=${LATEST_STABLE#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+            PATCH=$PATCH_RESET_VALUE
+          elif [ -n "$LATEST_STABLE" ]; then
+            # Compare versions - if stable >= dev, we just released to prod
+            local STABLE_VER=${LATEST_STABLE#v}
+            local DEV_VER=${LATEST_DEV#v}
+            DEV_VER=${DEV_VER%%-*}
+
+            # Use sort -V to compare versions
+            local NEWER=$(printf "%s\n%s" "$STABLE_VER" "$DEV_VER" | sort -V -r | head -n1)
+
+            if [ "$NEWER" == "$STABLE_VER" ]; then
+              # Production is newer or equal, bump minor from stable
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
+              read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+              PATCH=$PATCH_RESET_VALUE
+            else
+              # Continue from dev
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$DEV_VER"
+
+              # Apply bump type from commit messages
+              case "$BUMP_TYPE" in
+                major)
+                  MAJOR=$((MAJOR + 1))
+                  MINOR=0
+                  PATCH=$PATCH_RESET_VALUE
+                  ;;
+                minor)
+                  read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+                  PATCH=$PATCH_RESET_VALUE
+                  ;;
+                patch)
+                  PATCH=$((PATCH + 1))
+                  ;;
+              esac
+            fi
+          else
+            # Only dev tags exist
+            local VERSION=${LATEST_DEV#v}
+            VERSION=${VERSION%%-*}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+            # Apply bump type from commit messages
+            case "$BUMP_TYPE" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=$PATCH_RESET_VALUE
+                ;;
+              minor)
+                read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
+                PATCH=$PATCH_RESET_VALUE
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+          fi
+
+          echo "${MAJOR}.${MINOR}.${PATCH}-dev"
+        }
+
         # Detect context: PR or push, and which branch
         IS_PR="${{ github.event_name == 'pull_request' }}"
         if [ "$IS_PR" == "true" ]; then
@@ -212,170 +360,16 @@ runs:
 
         case "$RELEASE_TYPE" in
           production)
-            # Get latest stable production tag
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-
-            # Check for version bump commands in commits
-            BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
-            echo "🔍 Detected bump type from commits: $BUMP_TYPE"
-
-            # Get latest dev tag to determine production version (NOT rc tags!)
-            # RC tags are for PRs to main, not for regular dev->main merges
-            LATEST_DEV_TAG=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-
-            # Determine base version from dev tag
-            if [ -z "$LATEST_DEV_TAG" ]; then
-              # No dev tags exist (direct commits to main)
-              if [ -z "$LATEST_STABLE" ]; then
-                # No tags at all, use default
-                VERSION="$DEFAULT_VERSION"
-              else
-                # Only stable tags exist (direct main commits)
-                STABLE_VER=${LATEST_STABLE#v}
-                IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
-
-                # Apply bump type from commit messages
-                case "$BUMP_TYPE" in
-                  major)
-                    MAJOR=$((MAJOR + 1))
-                    MINOR=0
-                    PATCH=$PATCH_RESET_VALUE
-                    ;;
-                  minor)
-                    read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                    PATCH=$PATCH_RESET_VALUE
-                    ;;
-                  patch)
-                    PATCH=$((PATCH + 1))
-                    ;;
-                esac
-
-                VERSION="${MAJOR}.${MINOR}.${PATCH}"
-              fi
-            else
-              # Use latest dev tag (from dev->main merge)
-              LATEST_TAG=$LATEST_DEV_TAG
-
-              # Strip 'v' and suffix to get base version
-              BASE_VERSION=${LATEST_TAG#v}
-              BASE_VERSION=${BASE_VERSION%%-*}
-
-              # Check if this version already exists as stable
-              if git rev-parse "v${BASE_VERSION}" >/dev/null 2>&1; then
-                # Version already exists, increment minor (hotfix scenario)
-                IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
-                read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                VERSION="${MAJOR}.${MINOR}.${PATCH_RESET_VALUE}"
-                echo "⚠️  Version ${BASE_VERSION} already exists, using ${VERSION} (hotfix)"
-              else
-                # Version doesn't exist, use it
-                VERSION="$BASE_VERSION"
-              fi
-            fi
+            VERSION=$(calculate_production_version)
             ;;
 
           dev)
-            # Get latest stable (production) tag
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-
-            # Get latest dev tag
-            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-
-            # Check for version bump commands in commits
-            BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_DEV")
-            echo "🔍 Detected bump type from commits: $BUMP_TYPE"
-
-            if [ -z "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
-              # No tags exist, use default
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$DEFAULT_VERSION"
-            elif [ -n "$LATEST_STABLE" ] && [ -z "$LATEST_DEV" ]; then
-              # Production release exists but no dev yet, bump minor
-              VERSION=${LATEST_STABLE#v}
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-              read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-              PATCH=$PATCH_RESET_VALUE
-            elif [ -n "$LATEST_STABLE" ]; then
-              # Compare versions - if stable >= dev, we just released to prod
-              STABLE_VER=${LATEST_STABLE#v}
-              DEV_VER=${LATEST_DEV#v}
-              DEV_VER=${DEV_VER%%-*}
-
-              # Use sort -V to compare versions
-              NEWER=$(printf "%s\n%s" "$STABLE_VER" "$DEV_VER" | sort -V -r | head -n1)
-
-              if [ "$NEWER" == "$STABLE_VER" ]; then
-                # Production is newer or equal, bump minor from stable
-                IFS='.' read -r MAJOR MINOR PATCH <<< "$STABLE_VER"
-                read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                PATCH=$PATCH_RESET_VALUE
-              else
-                # Continue from dev
-                IFS='.' read -r MAJOR MINOR PATCH <<< "$DEV_VER"
-
-                # Apply bump type from commit messages
-                case "$BUMP_TYPE" in
-                  major)
-                    MAJOR=$((MAJOR + 1))
-                    MINOR=0
-                    PATCH=$PATCH_RESET_VALUE
-                    ;;
-                  minor)
-                    read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                    PATCH=$PATCH_RESET_VALUE
-                    ;;
-                  patch)
-                    PATCH=$((PATCH + 1))
-                    ;;
-                esac
-              fi
-            else
-              # Only dev tags exist
-              VERSION=${LATEST_DEV#v}
-              VERSION=${VERSION%%-*}
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-              # Apply bump type from commit messages
-              case "$BUMP_TYPE" in
-                major)
-                  MAJOR=$((MAJOR + 1))
-                  MINOR=0
-                  PATCH=$PATCH_RESET_VALUE
-                  ;;
-                minor)
-                  read -r MAJOR MINOR <<< "$(handle_yearly_minor_increment $MAJOR $MINOR)"
-                  PATCH=$PATCH_RESET_VALUE
-                  ;;
-                patch)
-                  PATCH=$((PATCH + 1))
-                  ;;
-              esac
-            fi
-
-            VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
+            VERSION=$(calculate_dev_version)
             ;;
 
           rc)
-            # Calculate the future version (what it would be without 0.0.0)
-            # Get latest dev or stable version tag to base our version on
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-
-            # Use the most recent version as base for future version
-            if [ -n "$LATEST_DEV" ]; then
-              LATEST_TAG=$LATEST_DEV
-            elif [ -n "$LATEST_STABLE" ]; then
-              LATEST_TAG=$LATEST_STABLE
-            else
-              LATEST_TAG=""
-            fi
-
-            if [ -z "$LATEST_TAG" ]; then
-              FUTURE_VERSION="${DEFAULT_VERSION}"
-            else
-              VERSION_STR=${LATEST_TAG#v}
-              VERSION_STR=${VERSION_STR%%-*}
-              FUTURE_VERSION="$VERSION_STR"
-            fi
+            # Calculate the future version using production logic (what it would be when merged to main)
+            FUTURE_VERSION=$(calculate_production_version)
 
             # Use 0.0.0 as base for transient RC versions
             BASE_VERSION="0.0.0"
@@ -388,29 +382,8 @@ runs:
             ;;
 
           pr)
-            # Calculate the future version (what it would be without 0.0.0)
-            # Get latest dev or stable version tag to base our version on
-            LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-            LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
-
-            # Use the most recent version as base for future version
-            if [ -n "$LATEST_DEV" ]; then
-              LATEST_TAG=$LATEST_DEV
-            elif [ -n "$LATEST_STABLE" ]; then
-              LATEST_TAG=$LATEST_STABLE
-            else
-              LATEST_TAG=""
-            fi
-
-            if [ -z "$LATEST_TAG" ]; then
-              FUTURE_VERSION="${DEFAULT_VERSION}-dev"
-            else
-              VERSION_STR=${LATEST_TAG#v}
-              VERSION_STR=${VERSION_STR%%-*}
-              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_STR"
-              PATCH=$((PATCH + 1))
-              FUTURE_VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
-            fi
+            # Calculate the future version using dev logic (what it would be when merged to dev)
+            FUTURE_VERSION=$(calculate_dev_version)
 
             # Use 0.0.0 as base for transient PR versions
             BASE_VERSION="0.0.0"
@@ -443,12 +416,12 @@ runs:
           rc)
             ENVIRONMENT="staging"
             SUFFIX="rc"
-            # FUTURE_VERSION already calculated above for RC
+            # FUTURE_VERSION already calculated above using calculate_production_version
             ;;
           pr)
             ENVIRONMENT="pr-${PR_NUMBER}"
             SUFFIX="pr-${PR_NUMBER}"
-            # FUTURE_VERSION already calculated above for PR
+            # FUTURE_VERSION already calculated above using calculate_dev_version
             ;;
         esac
 

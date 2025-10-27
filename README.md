@@ -25,10 +25,10 @@ The action automatically detects the workflow context and determines the version
 
 ### Push to Main Branch (Production)
 
-1. Checks for latest dev/RC tags
+1. Checks for latest dev tags
 2. If found, uses that version as the next production version (strips suffix)
 3. If version already exists, increments patch (hotfix scenario)
-4. If no dev/RC tags, increments patch from latest stable
+4. If no dev tags, increments patch from latest stable
 5. Creates tag: `v1.2.3`
 
 ### Push to Dev Branch

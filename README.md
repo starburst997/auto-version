@@ -19,6 +19,40 @@ This workflow enables:
 - Clear version progression from dev → rc → production
 - No version conflicts across environments
 
+## How It Works
+
+The action automatically detects the workflow context and determines the version strategy:
+
+### Push to Main Branch (Production)
+
+1. Checks for latest dev/RC tags
+2. If found, uses that version as the next production version (strips suffix)
+3. If version already exists, increments patch (hotfix scenario)
+4. If no dev/RC tags, increments patch from latest stable
+5. Creates tag: `v1.2.3`
+
+### Push to Dev Branch
+
+1. Compares latest stable and dev versions
+2. If stable is newer (just released to production), bumps minor from stable and resets patch
+3. Otherwise, increments patch from latest dev
+4. Appends `-dev` suffix
+5. Creates tag: `v1.2.3-dev`
+
+### Pull Request to Main Branch (Release Candidate)
+
+1. Uses 0.0.0 as base for transient RC versions
+2. Counts existing RC tags
+3. Increments RC number
+4. Creates tag: `v0.0.0-rc.1`, `v0.0.0-rc.2`, etc.
+
+### Pull Request to Dev Branch (PR Preview)
+
+1. Uses 0.0.0 as base for transient PR versions
+2. Counts existing PR tags for this PR number
+3. Increments PR build number
+4. Creates tag: `v0.0.0-pr-123.1`, `v0.0.0-pr-123.2`, etc.
+
 ## Features
 
 - **Smart versioning**: Automatically calculates next version based on existing tags
@@ -376,40 +410,6 @@ jobs:
           # PR to main: v0.0.0-rc.1 (staging)
           # PR to dev: v0.0.0-pr-123.1 (preview)
 ```
-
-## How It Works
-
-The action automatically detects the workflow context and determines the version strategy:
-
-### Push to Main Branch (Production)
-
-1. Checks for latest dev/RC tags
-2. If found, uses that version as the next production version (strips suffix)
-3. If version already exists, increments patch (hotfix scenario)
-4. If no dev/RC tags, increments patch from latest stable
-5. Creates tag: `v1.2.3`
-
-### Push to Dev Branch
-
-1. Compares latest stable and dev versions
-2. If stable is newer (just released to production), bumps minor from stable and resets patch
-3. Otherwise, increments patch from latest dev
-4. Appends `-dev` suffix
-5. Creates tag: `v1.2.3-dev`
-
-### Pull Request to Main Branch (Release Candidate)
-
-1. Uses 0.0.0 as base for transient RC versions
-2. Counts existing RC tags
-3. Increments RC number
-4. Creates tag: `v0.0.0-rc.1`, `v0.0.0-rc.2`, etc.
-
-### Pull Request to Dev Branch (PR Preview)
-
-1. Uses 0.0.0 as base for transient PR versions
-2. Counts existing PR tags for this PR number
-3. Increments PR build number
-4. Creates tag: `v0.0.0-pr-123.1`, `v0.0.0-pr-123.2`, etc.
 
 ## License
 

@@ -72,9 +72,9 @@ inputs:
     required: false
     default: ""
   patch-reset-value:
-    description: "Value to reset PATCH to when incrementing MAJOR or MINOR (default: 1)"
+    description: "Value to reset PATCH to when incrementing MAJOR or MINOR"
     required: false
-    default: "1"
+    default: "0"
 
 outputs:
   version:

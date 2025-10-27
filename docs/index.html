@@ -441,8 +441,8 @@
             <div class="feature-icon">📅</div>
             <h3>Yearly Versioning</h3>
             <p>
-              Use year as major version (2025.0.0 format). Automatically
-              updates to new year when incrementing minor version.
+              Use year as major version (2025.0.0 format). Automatically updates
+              to new year when incrementing minor version.
             </p>
           </div>
         </div>
@@ -495,7 +495,8 @@
                 Create PR from dev branch to main branch
               </div>
               <div class="step-result">
-                Creates transient RC tag: <span class="step-version">v0.0.0-rc.1</span>
+                Creates transient RC tag:
+                <span class="step-version">v0.0.0-rc.1</span>
               </div>
             </div>
           </div>
@@ -900,7 +901,8 @@
             <div class="param-item">
               <div class="param-name">yearly</div>
               <div class="param-desc">
-                Use year as major version (e.g., 2025.0.0) and auto-update on new year
+                Use year as major version (e.g., 2025.0.0) and auto-update on
+                new year
               </div>
               <div class="param-default">Default: false</div>
             </div>
@@ -970,7 +972,8 @@
             <div class="param-item">
               <div class="param-name">update-version-files</div>
               <div class="param-desc">
-                Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing
+                Automatically update version in common version files
+                (package.json, pyproject.toml, etc.) without committing
               </div>
               <div class="param-default">Default: true</div>
             </div>
@@ -978,7 +981,8 @@
             <div class="param-item">
               <div class="param-name">version-file-paths</div>
               <div class="param-desc">
-                Additional paths to search for version files (space or newline separated). Useful for monorepos
+                Additional paths to search for version files (space or newline
+                separated). Useful for monorepos
               </div>
               <div class="param-default">Default: (empty)</div>
             </div>
@@ -988,7 +992,7 @@
               <div class="param-desc">
                 Value to reset PATCH to when incrementing MAJOR or MINOR
               </div>
-              <div class="param-default">Default: 1</div>
+              <div class="param-default">Default: 0</div>
             </div>
           </div>
 
@@ -1011,9 +1015,7 @@
 
             <div class="param-item">
               <div class="param-name">environment</div>
-              <div class="param-desc">
-                Environment type
-              </div>
+              <div class="param-desc">Environment type</div>
               <div class="param-default">
                 Example: production, dev, staging, or pr-42
               </div>
@@ -1024,15 +1026,14 @@
               <div class="param-desc">
                 Version suffix (empty for production)
               </div>
-              <div class="param-default">
-                Example: dev, rc, pr-42, or empty
-              </div>
+              <div class="param-default">Example: dev, rc, pr-42, or empty</div>
             </div>
 
             <div class="param-item">
               <div class="param-name">future-version</div>
               <div class="param-desc">
-                Actual semantic version for transient environments (RC/PR) before 0.0.0
+                Actual semantic version for transient environments (RC/PR)
+                before 0.0.0
               </div>
               <div class="param-default">
                 Example: 1.2.3 (when version is 0.0.0-rc.1)

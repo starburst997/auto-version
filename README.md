@@ -48,17 +48,17 @@ This workflow enables:
 | `edit-commit-message`  | Commit message template for file edit (use `{version}` placeholder)                                          | No       | `chore: update version to {version}` |
 | `update-version-files` | Automatically update version in common version files (package.json, pyproject.toml, etc.) without committing | No       | `true`                               |
 | `version-file-paths`   | Additional paths to search for version files (space or newline separated). Useful for monorepos              | No       | `` (empty)                           |
-| `patch-reset-value`    | Value to reset PATCH to when incrementing MAJOR or MINOR                                                     | No       | `1`                                  |
+| `patch-reset-value`    | Value to reset PATCH to when incrementing MAJOR or MINOR                                                     | No       | `0`                                  |
 
 ## Outputs
 
-| Output           | Description                                                              | Example                               |
-| ---------------- | ------------------------------------------------------------------------ | ------------------------------------- |
-| `version`        | Calculated version                                                       | `1.2.3` or `1.2.3-dev`                |
-| `tag`            | Git tag with v prefix                                                    | `v1.2.3` or `v1.2.3-dev`              |
-| `environment`    | Environment type                                                         | `production`, `dev`, `staging`, `pr-42` |
-| `suffix`         | Version suffix (empty for production)                                    | `dev`, `rc`, `pr-42`, or empty       |
-| `future-version` | Actual semantic version for transient environments (RC/PR) before 0.0.0  | `1.2.3` (when version is `0.0.0-rc.1`) |
+| Output           | Description                                                             | Example                                 |
+| ---------------- | ----------------------------------------------------------------------- | --------------------------------------- |
+| `version`        | Calculated version                                                      | `1.2.3` or `1.2.3-dev`                  |
+| `tag`            | Git tag with v prefix                                                   | `v1.2.3` or `v1.2.3-dev`                |
+| `environment`    | Environment type                                                        | `production`, `dev`, `staging`, `pr-42` |
+| `suffix`         | Version suffix (empty for production)                                   | `dev`, `rc`, `pr-42`, or empty          |
+| `future-version` | Actual semantic version for transient environments (RC/PR) before 0.0.0 | `1.2.3` (when version is `0.0.0-rc.1`)  |
 
 ## Requirements
 

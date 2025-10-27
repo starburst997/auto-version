@@ -403,11 +403,13 @@ runs:
             fi
 
             if [ -z "$LATEST_TAG" ]; then
-              FUTURE_VERSION="${DEFAULT_VERSION}"
+              FUTURE_VERSION="${DEFAULT_VERSION}-dev"
             else
               VERSION_STR=${LATEST_TAG#v}
               VERSION_STR=${VERSION_STR%%-*}
-              FUTURE_VERSION="$VERSION_STR"
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_STR"
+              PATCH=$((PATCH + 1))
+              FUTURE_VERSION="${MAJOR}.${MINOR}.${PATCH}-dev"
             fi
 
             # Use 0.0.0 as base for transient PR versions

@@ -48,6 +48,17 @@ The action uses GitHub context variables to determine the workflow type:
 - Counts existing PR tags for this PR number
 - Format: `v1.2.3-pr-{PR_NUMBER}.N`
 
+### Outputs
+
+The action provides several outputs for use in subsequent workflow steps:
+
+- **version** - Calculated version (e.g., `1.2.3`, `1.2.3-dev`, `0.0.0-rc.1`)
+- **tag** - Git tag with `v` prefix (e.g., `v1.2.3`)
+- **environment** - Environment type (`production`, `dev`, `staging`, `pr-###`)
+- **suffix** - Version suffix (empty string, `dev`, `rc`, `pr-###`)
+- **future-version** - For RC/PR environments, the semantic version that would be used when merged (not `0.0.0`)
+- **stable-version** - Latest stable production version without pre-release suffix (always set, defaults to `default-version` if no stable tags exist)
+
 ## Key Implementation Details
 
 ### Tag Filtering Pattern
@@ -90,20 +101,29 @@ This repository uses itself for versioning via `.github/workflows/release.yml`:
 
 ## Documentation Requirements
 
-**IMPORTANT**: Any changes to inputs, outputs, or functionality MUST be documented in both:
+**CRITICAL RULE**: Any changes to inputs, outputs, or functionality MUST be documented in ALL THREE locations:
 
-1. **README.md** - User-facing documentation with:
-   - Updated inputs/outputs tables
+1. **action.yml** - The source of truth for inputs/outputs with:
+   - Input/output definition with description
+   - Required flag and default values
+   - Proper value mapping in steps
+
+2. **README.md** - User-facing documentation with:
+   - Updated inputs/outputs tables (must match action.yml exactly)
    - Usage examples showing new features
    - Clear descriptions and default values
 
-2. **docs/index.html** - Website documentation with:
-   - Updated reference cards for inputs/outputs
+3. **docs/index.html** - Website documentation with:
+   - Updated reference cards for inputs/outputs (must match action.yml exactly)
    - Workflow examples if applicable
    - Consistent styling with existing content
 
-When adding new inputs or outputs:
-- Add to the appropriate table in README.md
-- Add to the corresponding reference card in docs/index.html
-- Include examples demonstrating usage
-- Update CLAUDE.md if implementation details change
+**Mandatory checklist when adding/modifying inputs or outputs:**
+- [ ] Update action.yml with the input/output definition
+- [ ] Add to the inputs/outputs table in README.md with matching description
+- [ ] Add to the corresponding reference card in docs/index.html with matching description
+- [ ] Include examples demonstrating usage in README.md if applicable
+- [ ] Update CLAUDE.md if implementation details or version calculation logic changes
+- [ ] Ensure all three locations have consistent descriptions and examples
+
+**NEVER skip any of these three documentation locations. Missing documentation in any location is considered incomplete work.**

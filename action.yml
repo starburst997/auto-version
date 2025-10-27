@@ -92,6 +92,9 @@ outputs:
   future-version:
     description: "The actual semantic version for transient environments (RC/PR) that would be used if not 0.0.0"
     value: ${{ steps.calculate.outputs.future-version }}
+  stable-version:
+    description: "Latest stable production version (without pre-release suffix)"
+    value: ${{ steps.calculate.outputs.stable-version }}
 
 runs:
   using: "composite"
@@ -135,6 +138,9 @@ runs:
           CURRENT_YEAR=$(date +%Y)
           DEFAULT_VERSION="${CURRENT_YEAR}.0.0"
         fi
+
+        # Calculate latest stable version once (used by multiple functions)
+        LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
 
         # Helper function to handle yearly mode logic when incrementing minor
         # If yearly mode is enabled and current year > major, update major to current year
@@ -184,9 +190,6 @@ runs:
         # Function to calculate production version
         # Returns the version that would be used for a production release
         calculate_production_version() {
-          # Get latest stable production tag
-          local LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-
           # Check for version bump commands in commits
           local BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
 
@@ -249,9 +252,6 @@ runs:
         # Function to calculate dev version
         # Returns the version that would be used for a dev release
         calculate_dev_version() {
-          # Get latest stable (production) tag
-          local LATEST_STABLE=$(git tag -l "v*" --sort=-version:refname | grep -v "dev\|rc\|pr" | head -n1 || true)
-
           # Get latest dev tag
           local LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
 
@@ -358,6 +358,13 @@ runs:
 
         echo "🔍 Detected context: $RELEASE_TYPE"
 
+        # Calculate stable version output (strip 'v' prefix from LATEST_STABLE)
+        if [ -z "$LATEST_STABLE" ]; then
+          STABLE_VERSION="$DEFAULT_VERSION"
+        else
+          STABLE_VERSION="${LATEST_STABLE#v}"
+        fi
+
         case "$RELEASE_TYPE" in
           production)
             VERSION=$(calculate_production_version)
@@ -430,9 +437,11 @@ runs:
         echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
         echo "suffix=$SUFFIX" >> $GITHUB_OUTPUT
         echo "future-version=$FUTURE_VERSION" >> $GITHUB_OUTPUT
+        echo "stable-version=$STABLE_VERSION" >> $GITHUB_OUTPUT
         echo "📦 Version: $VERSION"
         echo "🌍 Environment: $ENVIRONMENT"
         echo "🏷️  Suffix: $SUFFIX"
+        echo "🏁 Stable Version: $STABLE_VERSION"
         if [ "$RELEASE_TYPE" == "rc" ] || [ "$RELEASE_TYPE" == "pr" ]; then
           echo "🔮 Future Version: $FUTURE_VERSION"
         fi

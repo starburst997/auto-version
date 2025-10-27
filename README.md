@@ -93,6 +93,7 @@ The action automatically detects the workflow context and determines the version
 | `environment`    | Environment type                                                        | `production`, `dev`, `staging`, `pr-42` |
 | `suffix`         | Version suffix (empty for production)                                   | `dev`, `rc`, `pr-42`, or empty          |
 | `future-version` | Actual semantic version for transient environments (RC/PR) before 0.0.0 | `1.2.3` (when version is `0.0.0-rc.1`)  |
+| `stable-version` | Latest stable production version (without pre-release suffix)           | `1.2.3`                                 |
 
 ## Requirements
 

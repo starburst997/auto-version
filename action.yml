@@ -360,7 +360,7 @@ runs:
 
         # Calculate stable version output (strip 'v' prefix from LATEST_STABLE)
         if [ -z "$LATEST_STABLE" ]; then
-          STABLE_VERSION="$DEFAULT_VERSION"
+          STABLE_VERSION=""
         else
           STABLE_VERSION="${LATEST_STABLE#v}"
         fi

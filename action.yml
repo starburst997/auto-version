@@ -656,7 +656,7 @@ runs:
       if: inputs.no-tags == 'false'
       shell: bash
       run: |
-        git tag ${{ steps.calculate.outputs.tag }}
+        git tag ${{ steps.calculate.outputs.tag }} || true
         echo "✅ Created tag ${{ steps.calculate.outputs.tag }}"
 
     - name: Update Major/Minor Tags

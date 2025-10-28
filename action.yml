@@ -174,11 +174,12 @@ runs:
 
           # Filter tags matching the expected pattern
           if [ -z "$expected_suffix" ]; then
-            # Production: look for stable tags (no suffix)
-            local matching_tag=$(echo "$tags_on_head" | grep "^v[0-9]" | grep -v "dev\|rc\|pr" | head -n1 || true)
+            # Production: look for stable tags (no suffix) with full MAJOR.MINOR.PATCH format
+            local matching_tag=$(echo "$tags_on_head" | grep "^v[0-9]\+\.[0-9]\+\.[0-9]\+$" | grep -v "dev\|rc\|pr" | head -n1 || true)
           else
-            # Dev/RC/PR: look for tags with expected suffix
-            local matching_tag=$(echo "$tags_on_head" | grep "^v[0-9].*${expected_suffix}" | head -n1 || true)
+            # Dev/RC/PR: look for tags with expected suffix with full MAJOR.MINOR.PATCH format
+            # Need to escape the suffix pattern for grep
+            local matching_tag=$(echo "$tags_on_head" | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+${expected_suffix}" | head -n1 || true)
           fi
 
           if [ -n "$matching_tag" ]; then

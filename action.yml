@@ -159,6 +159,33 @@ runs:
           fi
         }
 
+        # Function to check if HEAD already has a tag matching the expected pattern
+        # Returns the tag if found, empty string otherwise
+        check_existing_tag_on_head() {
+          local expected_suffix=$1  # e.g., "", "-dev", "-rc", "-pr-123"
+          local head_sha=$(git rev-parse HEAD)
+
+          # Get all tags pointing to HEAD
+          local tags_on_head=$(git tag --points-at HEAD 2>/dev/null || true)
+
+          if [ -z "$tags_on_head" ]; then
+            return 0  # No tags on HEAD
+          fi
+
+          # Filter tags matching the expected pattern
+          if [ -z "$expected_suffix" ]; then
+            # Production: look for stable tags (no suffix)
+            local matching_tag=$(echo "$tags_on_head" | grep "^v[0-9]" | grep -v "dev\|rc\|pr" | head -n1 || true)
+          else
+            # Dev/RC/PR: look for tags with expected suffix
+            local matching_tag=$(echo "$tags_on_head" | grep "^v[0-9].*${expected_suffix}" | head -n1 || true)
+          fi
+
+          if [ -n "$matching_tag" ]; then
+            echo "$matching_tag"
+          fi
+        }
+
         # Function to check commit messages for version bump commands
         check_commit_messages_for_bump() {
           local last_tag=$1
@@ -190,6 +217,14 @@ runs:
         # Function to calculate production version
         # Returns the version that would be used for a production release
         calculate_production_version() {
+          # Check if HEAD already has a production tag
+          local EXISTING_TAG=$(check_existing_tag_on_head "")
+          if [ -n "$EXISTING_TAG" ]; then
+            # Strip 'v' prefix and return
+            echo "${EXISTING_TAG#v}"
+            return 0
+          fi
+
           # Check for version bump commands in commits
           local BUMP_TYPE=$(check_commit_messages_for_bump "$LATEST_STABLE")
 
@@ -252,6 +287,14 @@ runs:
         # Function to calculate dev version
         # Returns the version that would be used for a dev release
         calculate_dev_version() {
+          # Check if HEAD already has a dev tag
+          local EXISTING_TAG=$(check_existing_tag_on_head "-dev")
+          if [ -n "$EXISTING_TAG" ]; then
+            # Strip 'v' prefix and return
+            echo "${EXISTING_TAG#v}"
+            return 0
+          fi
+
           # Get latest dev tag
           local LATEST_DEV=$(git tag -l "v*-dev" --sort=-version:refname | head -n1 || true)
 
